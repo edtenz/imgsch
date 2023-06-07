@@ -1,0 +1,7 @@
+/data
+/volumes
+tmp/*
+logs/*
+__pycache__/
+
+*.log
