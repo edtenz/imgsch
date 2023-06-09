@@ -3,5 +3,7 @@
 tmp/*
 logs/*
 __pycache__/
+venv/*
+data/*
 
 *.log
