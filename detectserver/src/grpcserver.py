@@ -32,15 +32,15 @@ class FeatureService(api_pb2_grpc.FeatureServiceServicer):
         LOGGER.info(f"Received Extract request: {request}")
         box = get_box(request.bbox)
         features = extractor.extract(request.key, box)
-        if features:
+        if features is None or len(features) == 0:
+            header = api_pb2.ResponseHeader(code=2, msg="extract failed")
+            LOGGER.warn(f"Extract error with response: {header}")
+            return api_pb2.ExtractResponse(header=header)
+        else:
             header = api_pb2.ResponseHeader(code=0, msg="")
             response = api_pb2.ExtractResponse(header=header, features=features)
             LOGGER.info(f"Extract response: {response}")
             return response
-        else:
-            header = api_pb2.ResponseHeader(code=2, msg="extract failed")
-            LOGGER.warn(f"Extract error with response: {header}")
-            return api_pb2.ExtractResponse(header=header)
 
 
 def get_box(bbox: api_pb2.BoundingBox) -> tuple[int, int, int, int]:
