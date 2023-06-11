@@ -1,21 +1,19 @@
-from detect import detect, obj_embedding
+from detect import Detector
 
 
-def test_detect():
+def test_detect_file():
     img = '../data/objects.png'
-    res = detect(img)
+    detector = Detector()
+    res = detector.detect_file(img)
     for item in res:
         print(item)
     assert len(res) == 2
 
 
-def test_pipeline():
-    # data = 'https://towhee.io/object-detection/yolo/raw/branch/main/objects.png'
-    img = '../data/objects.png'
-    res = obj_embedding(img)
-    print(res.size)  # return 2
-    for i in range(res.size):
-        item = res.get()
-        # print('res[{}]:'.format(i), item)
-        print('{}: url: {}, box: {}, class: {}, score: {}'.format(i, item[0], item[1], item[2], item[3]))
-        print('============')
+def test_detect():
+    key = '224d11f6b5d17a73c4d03546b433410a'
+    detector = Detector()
+    res = detector.detect(key)
+    for item in res:
+        print(item)
+    assert len(res) == 2

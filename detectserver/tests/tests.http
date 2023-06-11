@@ -1,14 +1,13 @@
 
 ### detect by get
-GET localhost:8099/detect?img=https://towhee.io/object-detection/yolo/raw/branch/main/objects.png
+GET localhost:8099/detect?key=224d11f6b5d17a73c4d03546b433410a
 
 
 
 ### detect by post
-POST localhost:8099/detect_batch
+POST localhost:8099/detect
 Content-Type: application/json
 
-[
-  "https://towhee.io/object-detection/yolo/raw/branch/main/objects.png"
-]
-
+{
+  "key": "224d11f6b5d17a73c4d03546b433410a"
+}
