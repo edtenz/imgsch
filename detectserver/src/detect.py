@@ -20,7 +20,7 @@ class BoundingBox(object):
         return 'box: {}, score: {}, cat: {}'.format(self.box, self.score, self.cat)
 
 
-def detect(url: str):
+def detect(url: str) -> list[BoundingBox]:
     bboxes = []
     res = obj_embedding(url)
     if res.size == 0:
@@ -35,3 +35,24 @@ def detect(url: str):
         bbox.score = item[3]
         bboxes.append(bbox)
     return bboxes
+
+
+def detect_map_list(url: str) -> list[dict]:
+    boxes = detect(url)
+    bboxes = []
+    for bbox in boxes:
+        bbox_map = {
+            'box': bbox.box,
+            'score': bbox.score,
+            'cat': bbox.cat
+        }
+        bboxes.append(bbox_map)
+    return bboxes
+
+
+def detect_map_list_batch(urls: list) -> dict[list[dict]]:
+    res = {}
+    for url in urls:
+        bboxes = detect_map_list(url)
+        res[url] = bboxes
+    return res
