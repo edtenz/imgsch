@@ -9,9 +9,11 @@ help: ### Show this help.
 .PHONY init:
 init: ### Initialize the project.
 	@echo "Initializing..."
-	python3 -m venv venv
+	#python3 -m venv venv
 	# deactivate
 	# source venv/bin/activate
+	conda create -n towhee python=3.9
+	conda activate towhee
 
 .PHONY install:
 install: ### Install the project.
