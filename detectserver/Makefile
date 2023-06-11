@@ -10,7 +10,8 @@ help: ### Show this help.
 init: ### Initialize the project.
 	@echo "Initializing..."
 	python3 -m venv venv
-	source venv/bin/activate
+	# deactivate
+	# source venv/bin/activate
 
 .PHONY install:
 install: ### Install the project.
@@ -24,3 +25,10 @@ install: ### Install the project.
 run:
 	@echo "Running..."
 	python src/main.py
+
+
+.PHONY proto:
+proto:
+	#python -m grpc_tools.protoc -I ./api --python_out=./src --grpc_python_out=./src ./api/api.proto
+	python -m grpc_tools.protoc --proto_path=./api ./api/api.proto --python_out=./src --grpc_python_out=./src
+

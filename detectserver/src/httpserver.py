@@ -3,13 +3,11 @@ from fastapi import FastAPI
 from fastapi.responses import JSONResponse
 
 from config import HTTP_PORT
-from detect import Detector
-from extract import Extractor
+from detect import detector
+from extract import extractor
 from logs import LOGGER
 
 app = FastAPI()
-detector = Detector()
-extractor = Extractor()
 
 
 @app.get("/ping")
@@ -45,7 +43,7 @@ def extract_imag(key: str, bbox: str):
         return {'status': False, 'msg': e}, 400
 
 
-def get_bbox(bbox: str) -> tuple[int, int, int, int] | None:
+def get_bbox(bbox: str) -> tuple[int, int, int, int]:
     """
     Get bbox from string
     :param bbox:  bbox string, like: '1,2,3,4'
@@ -60,5 +58,5 @@ def get_bbox(bbox: str) -> tuple[int, int, int, int] | None:
 
 
 def start_http_server():
-    LOGGER.info(f"listen on:{HTTP_PORT}")
+    LOGGER.info(f"http listen on: {HTTP_PORT}")
     uvicorn.run(app, host="0.0.0.0", port=int(HTTP_PORT))

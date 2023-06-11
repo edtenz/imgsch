@@ -6,6 +6,9 @@ LOGS_NUM = int(os.getenv("logs_num", "0"))
 ############### Detectserver Configuration ###############
 HTTP_PORT = os.getenv("HTTP_PORT", "8099")
 
+############### GRPC Configuration ###############
+GRPC_PORT = os.getenv("GRPC_PORT", "11298")
+
 ############### Minio Configuration ###############
 MINIO_ADDR = os.getenv("MINIO_HOST", "localhost:9000")
 MINIO_ACCESS_KEY = os.getenv("MINIO_ACCESS_KEY", "minioadmin")

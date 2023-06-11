@@ -42,5 +42,5 @@ message ExtractRequest {
 
 message ExtractResponse {
   optional ResponseHeader header = 1;
-  repeated float feature = 2;
+  repeated float features = 2;
 }

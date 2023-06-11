@@ -74,3 +74,6 @@ class Detector(object):
         LOGGER.debug('detect file: {}'.format(bboxes))
         remove_local_object(key)
         return bboxes
+
+
+detector = Detector()

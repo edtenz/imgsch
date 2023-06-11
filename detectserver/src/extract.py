@@ -19,7 +19,7 @@ class Extractor(object):
             .output('url', 'embedding')  # output
         )
 
-    def extract_file(self, url: str, box: tuple[int, int, int, int] | None) -> list[float]:
+    def extract_file(self, url: str, box: tuple[int, int, int, int]) -> list[float]:
         """
         Extract feature from local file or url
         :param url: url or local file path
@@ -42,7 +42,7 @@ class Extractor(object):
             LOGGER.error('extract feature failed, url: {}, box: {}, error: {}'.format(url, box, e))
             return []
 
-    def extract(self, key: str, box: tuple[int, int, int, int] | None) -> list[float]:
+    def extract(self, key: str, box: tuple[int, int, int, int]) -> list[float]:
         """
         Extract feature from minio object
         :param key: object name in minio
@@ -58,7 +58,7 @@ class Extractor(object):
         return features
 
 
-def get_image_dimensions(file_path) -> tuple[int, int] | None:
+def get_image_dimensions(file_path) -> tuple[int, int]:
     """
     Get image dimensions
     :param file_path:  image file path
@@ -67,3 +67,6 @@ def get_image_dimensions(file_path) -> tuple[int, int] | None:
     with Image.open(file_path) as image:
         width, height = image.size
         return width, height
+
+
+extractor = Extractor()
