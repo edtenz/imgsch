@@ -1,16 +1,15 @@
-import os
-
 import uvicorn
-from fastapi import FastAPI, File, UploadFile
+from fastapi import FastAPI
 from fastapi.responses import JSONResponse
 
-from config import HTTP_PORT, MINIO_DOWNLOAD_PATH
+from config import HTTP_PORT
 from detect import Detector
+from extract import Extractor
 from logs import LOGGER
-from minio_client import md5_hash, mclient, remove_local_object
 
 app = FastAPI()
 detector = Detector()
+extractor = Extractor()
 
 
 @app.get("/ping")
@@ -31,25 +30,33 @@ def detect_img(key: str):
         return {'status': False, 'msg': e}, 400
 
 
-@app.post('/img/upload')
-async def upload_images(image: UploadFile = File(None)):
+@app.get('/extract')
+def extract_imag(key: str, bbox: str):
     try:
-        if image is not None:
-            content = await image.read()
-            LOGGER.info(f"received image: {image.filename}")
-            object_name = md5_hash(content)
-            img_path = os.path.join(MINIO_DOWNLOAD_PATH, image.filename)
-            with open(img_path, "wb+") as f:
-                f.write(content)
-        else:
-            return {'status': False, 'msg': 'Image and url are required'}, 400
-        mclient.upload(object_name, img_path)
-        LOGGER.info(f"Successfully uploaded data, object name: {object_name}")
-        remove_local_object(img_path)
-        return {'status': True, 'msg': 'success', 'data': object_name}
+        LOGGER.debug(f"extract image: {key} with bbox: {bbox}")
+        # split bbox by comma
+        box = get_bbox(bbox)
+        features = extractor.extract(key, box)
+
+        LOGGER.info(f"Successfully extract image: {key}, feature: {features}")
+        return JSONResponse({'status': True, 'msg': 'success', 'data': features.tolist()})
     except Exception as e:
-        LOGGER.error(e)
+        LOGGER.error(f"Get image error: {e}")
         return {'status': False, 'msg': e}, 400
+
+
+def get_bbox(bbox: str) -> tuple[int, int, int, int] | None:
+    """
+    Get bbox from string
+    :param bbox:  bbox string, like: '1,2,3,4'
+    :return: box tuple, like: (1,2,3,4)
+    """
+    if bbox is None:
+        return None
+    box = [int(item) for item in bbox.split(',')]
+    if len(box) != 4:
+        return None
+    return box[0], box[1], box[2], box[3]
 
 
 def start_http_server():
