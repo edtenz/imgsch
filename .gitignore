@@ -7,3 +7,6 @@ venv/*
 data/*
 
 *.log
+.DS_Store
+.idea/
+.idea/*

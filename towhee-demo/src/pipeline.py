@@ -1,4 +1,14 @@
-from towhee import pipe, ops
+from towhee import pipe, ops, AutoConfig
+
+auto_config = AutoConfig.LocalCPUConfig()
+
+print('device:', auto_config.config)
+print('triton:', AutoConfig.TritonCPUConfig(
+    num_instances_per_device=3,
+    max_batch_size=128,
+    batch_latency_micros=100000,
+    preferred_batch_size=[8, 16],
+).config)
 
 
 def double_x(x):

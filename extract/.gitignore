@@ -1,9 +1,0 @@
-/data
-/volumes
-/venv
-/exception
-/object
-/test
-/train
-
-*.zip
