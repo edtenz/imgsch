@@ -21,9 +21,9 @@ def test_extract():
     with grpc.insecure_channel(f'localhost:{GRPC_PORT}') as channel:
         stub = api_pb2_grpc.FeatureServiceStub(channel)
         header = api_pb2.RequestHeader(request_id='abc123')
-        bbox = api_pb2.BoundingBox(box=[448, 153, 663, 375])
+        box = [448, 153, 663, 375]
         response = stub.Extract(
-            api_pb2.ExtractRequest(header=header, key='224d11f6b5d17a73c4d03546b433410a', bbox=bbox))
+            api_pb2.ExtractRequest(header=header, key='224d11f6b5d17a73c4d03546b433410a', box=box))
         # print(response)
         print(json_format.MessageToJson(response))
         assert response.header.code == 0

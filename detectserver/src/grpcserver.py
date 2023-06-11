@@ -30,7 +30,7 @@ class FeatureService(api_pb2_grpc.FeatureServiceServicer):
 
     def Extract(self, request, context):
         LOGGER.info(f"Received Extract request: {request}")
-        box = get_box(request.bbox)
+        box = get_box(request.box)
         features = extractor.extract(request.key, box)
         if features is None or len(features) == 0:
             header = api_pb2.ResponseHeader(code=2, msg="extract failed")
@@ -43,17 +43,17 @@ class FeatureService(api_pb2_grpc.FeatureServiceServicer):
             return response
 
 
-def get_box(bbox: api_pb2.BoundingBox) -> tuple[int, int, int, int]:
+def get_box(box) -> tuple[int, int, int, int]:
     """
     Get bbox from protobuf
-    :param bbox: bbox protobuf
+    :param box: box array, like: [1,2,3,4]
     :return: box tuple, like: (1,2,3,4)
     """
-    if bbox is None:
+    if box is None:
         return None
-    if len(bbox.box) != 4:
+    if len(box) != 4:
         return None
-    return bbox.box[0], bbox.box[1], bbox.box[2], bbox.box[3]
+    return box[0], box[1], box[2], box[3]
 
 
 def start_grpc_server():

@@ -37,7 +37,7 @@ message DetectResponse {
 message ExtractRequest {
   optional RequestHeader header = 1;
   optional string key = 2;
-  optional BoundingBox bbox = 3;
+  repeated int32 box = 3;
 }
 
 message ExtractResponse {
