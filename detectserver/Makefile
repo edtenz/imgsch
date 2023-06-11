@@ -19,12 +19,8 @@ install: ### Install the project.
 	pip install -r requirements.txt
 
 
-.PHONY build:
-build:
-	@echo "Running..."
-	python build_model.py
 
 .PHONY run:
 run:
 	@echo "Running..."
-	tritonserver --model-repository /Users/edtenz/Workspaces/edtenz-repo/imgsch/detectserver/models
+	python src/main.py

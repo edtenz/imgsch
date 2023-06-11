@@ -1,0 +1,1 @@
+curl localhost:8099/detect?img=https://towhee.io/object-detection/yolo/raw/branch/main/objects.png

@@ -20,7 +20,7 @@ class BoundingBox(object):
         return 'box: {}, score: {}, cat: {}'.format(self.box, self.score, self.cat)
 
 
-def detect(url):
+def detect(url: str):
     bboxes = []
     res = obj_embedding(url)
     if res.size == 0:
@@ -35,8 +35,3 @@ def detect(url):
         bbox.score = item[3]
         bboxes.append(bbox)
     return bboxes
-
-
-if __name__ == '__main__':
-    print('Start image detect service...')
-    test_pipeline()

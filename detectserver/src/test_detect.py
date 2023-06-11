@@ -1,8 +1,8 @@
-from main import detect, obj_embedding
+from detect import detect, obj_embedding
 
 
 def test_detect():
-    img = './data/objects.png'
+    img = '../data/objects.png'
     res = detect(img)
     for item in res:
         print(item)
@@ -11,7 +11,7 @@ def test_detect():
 
 def test_pipeline():
     # data = 'https://towhee.io/object-detection/yolo/raw/branch/main/objects.png'
-    img = './data/objects.png'
+    img = '../data/objects.png'
     res = obj_embedding(img)
     print(res.size)  # return 2
     for i in range(res.size):
