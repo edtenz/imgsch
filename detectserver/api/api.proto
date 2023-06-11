@@ -1,0 +1,46 @@
+syntax = "proto3";
+
+service FeatureService {
+  rpc Detect(DetectRequest) returns (DetectResponse) {}
+  rpc Extract(ExtractRequest) returns (ExtractResponse) {}
+}
+
+
+message RequestHeader {
+  optional string request_id = 1;
+}
+
+
+message ResponseHeader {
+  optional int32 code = 1;
+  optional string msg = 2;
+}
+
+
+
+message DetectRequest {
+  optional RequestHeader header = 1;
+  optional string key = 2;
+}
+
+message BoundingBox {
+  repeated int32 box = 1;
+  optional float score = 2;
+  optional string label = 3;
+}
+
+message DetectResponse {
+  optional ResponseHeader header = 1;
+  repeated BoundingBox bboxes = 2;
+}
+
+message ExtractRequest {
+  optional RequestHeader header = 1;
+  optional string key = 2;
+  optional BoundingBox bbox = 3;
+}
+
+message ExtractResponse {
+  optional ResponseHeader header = 1;
+  repeated float feature = 2;
+}
