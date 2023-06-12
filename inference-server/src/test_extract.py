@@ -10,7 +10,7 @@ def test_detect():
 
 
 def test_detect_without_box():
-    key = '224d11f6b5d17a73c4d03546b433410a'
+    key = 'bdd2ebce0a9e44233099a469f4872e2c'
     box = None
     res = extractor.extract(key, box)
     print(res)
