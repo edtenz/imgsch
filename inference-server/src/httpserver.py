@@ -3,8 +3,8 @@ from fastapi import FastAPI
 from fastapi.responses import JSONResponse
 
 from config import HTTP_PORT
-from detect import detector
-from extract import extractor
+from detect import DETECTOR
+from extract import EXTRACTOR
 from logs import LOGGER
 
 app = FastAPI()
@@ -20,7 +20,7 @@ def ping():
 def detect_img(key: str):
     try:
         LOGGER.debug(f"detect image: {key}")
-        bboxes = [item.to_dict() for item in detector.detect(key)]
+        bboxes = [item.to_dict() for item in DETECTOR.detect(key)]
         LOGGER.info(f"Successfully detect image: {key}, bboxes: {bboxes}")
         return JSONResponse({'status': True, 'msg': 'success', 'data': bboxes})
     except Exception as e:
@@ -34,9 +34,9 @@ def extract_imag(key: str, bbox: str):
         LOGGER.debug(f"extract image: {key} with bbox: {bbox}")
         # split bbox by comma
         box = get_bbox(bbox)
-        features = extractor.extract(key, box)
+        features = EXTRACTOR.extract(key, box)
 
-        LOGGER.info(f"Successfully extract image: {key}, feature: {features}")
+        LOGGER.info(f"Successfully extract image: {key}, feature: {features[:5]}, length: {len(features)}")
         return JSONResponse({'status': True, 'msg': 'success', 'data': features.tolist()})
     except Exception as e:
         LOGGER.error(f"Get image error: {e}")

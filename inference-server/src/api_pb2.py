@@ -13,27 +13,31 @@ _sym_db = _symbol_database.Default()
 
 
 
-DESCRIPTOR = _descriptor_pool.Default().AddSerializedFile(b'\n\tapi.proto\"7\n\rRequestHeader\x12\x17\n\nrequest_id\x18\x01 \x01(\tH\x00\x88\x01\x01\x42\r\n\x0b_request_id\"F\n\x0eResponseHeader\x12\x11\n\x04\x63ode\x18\x01 \x01(\x05H\x00\x88\x01\x01\x12\x10\n\x03msg\x18\x02 \x01(\tH\x01\x88\x01\x01\x42\x07\n\x05_codeB\x06\n\x04_msg\"Y\n\rDetectRequest\x12#\n\x06header\x18\x01 \x01(\x0b\x32\x0e.RequestHeaderH\x00\x88\x01\x01\x12\x10\n\x03key\x18\x02 \x01(\tH\x01\x88\x01\x01\x42\t\n\x07_headerB\x06\n\x04_key\"V\n\x0b\x42oundingBox\x12\x0b\n\x03\x62ox\x18\x01 \x03(\x05\x12\x12\n\x05score\x18\x02 \x01(\x02H\x00\x88\x01\x01\x12\x12\n\x05label\x18\x03 \x01(\tH\x01\x88\x01\x01\x42\x08\n\x06_scoreB\x08\n\x06_label\"_\n\x0e\x44\x65tectResponse\x12$\n\x06header\x18\x01 \x01(\x0b\x32\x0f.ResponseHeaderH\x00\x88\x01\x01\x12\x1c\n\x06\x62\x62oxes\x18\x02 \x03(\x0b\x32\x0c.BoundingBoxB\t\n\x07_header\"g\n\x0e\x45xtractRequest\x12#\n\x06header\x18\x01 \x01(\x0b\x32\x0e.RequestHeaderH\x00\x88\x01\x01\x12\x10\n\x03key\x18\x02 \x01(\tH\x01\x88\x01\x01\x12\x0b\n\x03\x62ox\x18\x03 \x03(\x05\x42\t\n\x07_headerB\x06\n\x04_key\"T\n\x0f\x45xtractResponse\x12$\n\x06header\x18\x01 \x01(\x0b\x32\x0f.ResponseHeaderH\x00\x88\x01\x01\x12\x10\n\x08\x66\x65\x61tures\x18\x02 \x03(\x02\x42\t\n\x07_header2m\n\x0e\x46\x65\x61tureService\x12+\n\x06\x44\x65tect\x12\x0e.DetectRequest\x1a\x0f.DetectResponse\"\x00\x12.\n\x07\x45xtract\x12\x0f.ExtractRequest\x1a\x10.ExtractResponse\"\x00\x62\x06proto3')
+DESCRIPTOR = _descriptor_pool.Default().AddSerializedFile(b'\n\tapi.proto\"B\n\x08\x43onstant\"6\n\x06Status\x12\x0b\n\x07SUCCESS\x10\x00\x12\x0e\n\nERR_DETECT\x10\x01\x12\x0f\n\x0b\x45RR_EXTRACT\x10\x02\"7\n\rRequestHeader\x12\x17\n\nrequest_id\x18\x01 \x01(\tH\x00\x88\x01\x01\x42\r\n\x0b_request_id\"F\n\x0eResponseHeader\x12\x11\n\x04\x63ode\x18\x01 \x01(\x05H\x00\x88\x01\x01\x12\x10\n\x03msg\x18\x02 \x01(\tH\x01\x88\x01\x01\x42\x07\n\x05_codeB\x06\n\x04_msg\"Y\n\rDetectRequest\x12#\n\x06header\x18\x01 \x01(\x0b\x32\x0e.RequestHeaderH\x00\x88\x01\x01\x12\x10\n\x03key\x18\x02 \x01(\tH\x01\x88\x01\x01\x42\t\n\x07_headerB\x06\n\x04_key\"V\n\x0b\x42oundingBox\x12\x0b\n\x03\x62ox\x18\x01 \x03(\x05\x12\x12\n\x05score\x18\x02 \x01(\x02H\x00\x88\x01\x01\x12\x12\n\x05label\x18\x03 \x01(\tH\x01\x88\x01\x01\x42\x08\n\x06_scoreB\x08\n\x06_label\"_\n\x0e\x44\x65tectResponse\x12$\n\x06header\x18\x01 \x01(\x0b\x32\x0f.ResponseHeaderH\x00\x88\x01\x01\x12\x1c\n\x06\x62\x62oxes\x18\x02 \x03(\x0b\x32\x0c.BoundingBoxB\t\n\x07_header\"g\n\x0e\x45xtractRequest\x12#\n\x06header\x18\x01 \x01(\x0b\x32\x0e.RequestHeaderH\x00\x88\x01\x01\x12\x10\n\x03key\x18\x02 \x01(\tH\x01\x88\x01\x01\x12\x0b\n\x03\x62ox\x18\x03 \x03(\x05\x42\t\n\x07_headerB\x06\n\x04_key\"T\n\x0f\x45xtractResponse\x12$\n\x06header\x18\x01 \x01(\x0b\x32\x0f.ResponseHeaderH\x00\x88\x01\x01\x12\x10\n\x08\x66\x65\x61tures\x18\x02 \x03(\x02\x42\t\n\x07_header2m\n\x0e\x46\x65\x61tureService\x12+\n\x06\x44\x65tect\x12\x0e.DetectRequest\x1a\x0f.DetectResponse\"\x00\x12.\n\x07\x45xtract\x12\x0f.ExtractRequest\x1a\x10.ExtractResponse\"\x00\x62\x06proto3')
 
 _builder.BuildMessageAndEnumDescriptors(DESCRIPTOR, globals())
 _builder.BuildTopDescriptorsAndMessages(DESCRIPTOR, 'api_pb2', globals())
 if _descriptor._USE_C_DESCRIPTORS == False:
 
   DESCRIPTOR._options = None
-  _REQUESTHEADER._serialized_start=13
-  _REQUESTHEADER._serialized_end=68
-  _RESPONSEHEADER._serialized_start=70
-  _RESPONSEHEADER._serialized_end=140
-  _DETECTREQUEST._serialized_start=142
-  _DETECTREQUEST._serialized_end=231
-  _BOUNDINGBOX._serialized_start=233
-  _BOUNDINGBOX._serialized_end=319
-  _DETECTRESPONSE._serialized_start=321
-  _DETECTRESPONSE._serialized_end=416
-  _EXTRACTREQUEST._serialized_start=418
-  _EXTRACTREQUEST._serialized_end=521
-  _EXTRACTRESPONSE._serialized_start=523
-  _EXTRACTRESPONSE._serialized_end=607
-  _FEATURESERVICE._serialized_start=609
-  _FEATURESERVICE._serialized_end=718
+  _CONSTANT._serialized_start=13
+  _CONSTANT._serialized_end=79
+  _CONSTANT_STATUS._serialized_start=25
+  _CONSTANT_STATUS._serialized_end=79
+  _REQUESTHEADER._serialized_start=81
+  _REQUESTHEADER._serialized_end=136
+  _RESPONSEHEADER._serialized_start=138
+  _RESPONSEHEADER._serialized_end=208
+  _DETECTREQUEST._serialized_start=210
+  _DETECTREQUEST._serialized_end=299
+  _BOUNDINGBOX._serialized_start=301
+  _BOUNDINGBOX._serialized_end=387
+  _DETECTRESPONSE._serialized_start=389
+  _DETECTRESPONSE._serialized_end=484
+  _EXTRACTREQUEST._serialized_start=486
+  _EXTRACTREQUEST._serialized_end=589
+  _EXTRACTRESPONSE._serialized_start=591
+  _EXTRACTRESPONSE._serialized_end=675
+  _FEATURESERVICE._serialized_start=677
+  _FEATURESERVICE._serialized_end=786
 # @@protoc_insertion_point(module_scope)

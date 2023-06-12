@@ -2,7 +2,7 @@ from PIL import Image
 from towhee import pipe, ops, AutoConfig
 
 from logs import LOGGER
-from minio_client import download_object, remove_local_object
+from minio_helpers import download_object, remove_local_object
 
 
 class Extractor(object):
@@ -69,4 +69,4 @@ def get_image_dimensions(file_path) -> tuple[int, int]:
         return width, height
 
 
-extractor = Extractor()
+EXTRACTOR = Extractor()

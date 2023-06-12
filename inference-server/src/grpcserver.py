@@ -5,23 +5,23 @@ import grpc
 import api_pb2
 import api_pb2_grpc
 from config import GRPC_PORT
-from detect import detector
-from extract import extractor
+from detect import DETECTOR
+from extract import EXTRACTOR
 from logs import LOGGER
 
 
 class FeatureService(api_pb2_grpc.FeatureServiceServicer):
     def Detect(self, request, context):
-        LOGGER.info(f"Received Detect request: {request}")
-        bboxes = detector.detect(request.key)
+        LOGGER.debug(f"Received Detect request: {request}")
+        bboxes = DETECTOR.detect(request.key)
         if bboxes:
             header = api_pb2.ResponseHeader(code=0, msg="")
             boxes = []
             for bbox in bboxes:
-                box = api_pb2.BoundingBox(box=bbox.box, score=bbox.score, label=bbox.cat)
+                box = api_pb2.BoundingBox(box=bbox.box, score=bbox.score, label=bbox.label)
                 boxes.append(box)
             response = api_pb2.DetectResponse(header=header, bboxes=boxes)
-            LOGGER.info(f"Detect response: {response}")
+            LOGGER.debug(f"Detect response: {response}")
             return response
         else:
             header = api_pb2.ResponseHeader(code=1, msg="detect failed")
@@ -29,9 +29,9 @@ class FeatureService(api_pb2_grpc.FeatureServiceServicer):
             return api_pb2.DetectResponse(header=header)
 
     def Extract(self, request, context):
-        LOGGER.info(f"Received Extract request: {request}")
+        LOGGER.debug(f"Received Extract request: {request}")
         box = get_box(request.box)
-        features = extractor.extract(request.key, box)
+        features = EXTRACTOR.extract(request.key, box)
         if features is None or len(features) == 0:
             header = api_pb2.ResponseHeader(code=2, msg="extract failed")
             LOGGER.warn(f"Extract error with response: {header}")
@@ -39,7 +39,7 @@ class FeatureService(api_pb2_grpc.FeatureServiceServicer):
         else:
             header = api_pb2.ResponseHeader(code=0, msg="")
             response = api_pb2.ExtractResponse(header=header, features=features)
-            LOGGER.info(f"Extract response: {response}")
+            LOGGER.debug(f"Extract response: {response}")
             return response
 
 

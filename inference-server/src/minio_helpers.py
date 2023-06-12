@@ -3,19 +3,22 @@ import os
 
 from minio import Minio
 
-from config import MINIO_ADDR, MINIO_ACCESS_KEY, MINIO_SECRET_KEY, MINIO_BUCKET_NAME, MINIO_DOWNLOAD_PATH
+from config import MINIO_ENDPOINT, MINIO_ACCESS_KEY, MINIO_SECRET_KEY, MINIO_BUCKET_NAME, MINIO_DOWNLOAD_PATH
 from logs import LOGGER
 
 
 class MinioClient(object):
-    def __init__(self, addr, access_key, secret_key, secure=False, bucket_name='imgsch'):
+    def __init__(self, endpoint=MINIO_ENDPOINT,
+                 access_key=MINIO_ACCESS_KEY,
+                 secret_key=MINIO_SECRET_KEY,
+                 secure=False,
+                 bucket_name=MINIO_BUCKET_NAME):
         self.bucket_name = bucket_name
-        self.minio_client = Minio(
-            addr,
-            access_key=access_key,
-            secret_key=secret_key,
-            secure=secure
-        )
+        self.minio_client = Minio(endpoint=endpoint,
+                                  access_key=access_key,
+                                  secret_key=secret_key,
+                                  secure=secure
+                                  )
 
         if not self.minio_client.bucket_exists(self.bucket_name):
             self.minio_client.make_bucket(bucket_name)
@@ -98,7 +101,7 @@ def calculate_md5(file_path: str) -> str:
         return ''
 
 
-mclient = MinioClient(MINIO_ADDR, MINIO_ACCESS_KEY, MINIO_SECRET_KEY, bucket_name=MINIO_BUCKET_NAME)
+MINIO_CLIENT = MinioClient()
 
 
 def download_object(object_name: str, download_dir=MINIO_DOWNLOAD_PATH) -> str:
@@ -111,7 +114,7 @@ def download_object(object_name: str, download_dir=MINIO_DOWNLOAD_PATH) -> str:
     if not os.path.exists(download_dir):
         os.makedirs(download_dir)
     download_path = os.path.join(download_dir, object_name)
-    ok = mclient.download(object_name, download_path)
+    ok = MINIO_CLIENT.download(object_name, download_path)
     if ok:
         return download_path
     else:

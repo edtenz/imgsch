@@ -1,19 +1,16 @@
+from pydantic import BaseModel
 from towhee import pipe, ops, AutoConfig
 
 from logs import LOGGER
-from minio_client import download_object, remove_local_object
+from minio_helpers import download_object, remove_local_object
 
 
-class BoundingBox(object):
-    def __init__(self):
-        self.box = []
-        self.score = 0.0
-        self.cat = ''
+class BoundingBox(BaseModel):
+    box: list[int]
+    score: float
+    label: str
 
-    def __str__(self):
-        return 'box: {}, score: {}, cat: {}'.format(self.box, self.score, self.cat)
-
-    def to_dict(self):
+    def to_dict(self) -> dict:
         """
         Convert BoundingBox to dict
         :return:  dict
@@ -21,7 +18,7 @@ class BoundingBox(object):
         return {
             'box': self.box,
             'score': self.score,
-            'cat': self.cat
+            'label': self.label
         }
 
 
@@ -51,10 +48,7 @@ class Detector(object):
         for i in range(res.size):
             item = res.get()
             # print('{}: url: {}, box: {}, class: {}, score: {}'.format(i, item[0], item[1], item[2], item[3]))
-            bbox = BoundingBox()
-            bbox.box = item[1]
-            bbox.cat = item[2]
-            bbox.score = item[3]
+            bbox = BoundingBox(box=item[1], score=item[3], label=item[2])
             bboxes.append(bbox)
         return bboxes
 
@@ -76,4 +70,4 @@ class Detector(object):
         return bboxes
 
 
-detector = Detector()
+DETECTOR = Detector()

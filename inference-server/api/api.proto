@@ -5,6 +5,13 @@ service FeatureService {
   rpc Extract(ExtractRequest) returns (ExtractResponse) {}
 }
 
+message Constant {
+  enum Status {
+    SUCCESS = 0;
+    ERR_DETECT = 1;
+    ERR_EXTRACT = 2;
+  }
+}
 
 message RequestHeader {
   optional string request_id = 1;
