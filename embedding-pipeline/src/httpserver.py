@@ -3,7 +3,7 @@ from fastapi import FastAPI
 from fastapi.responses import JSONResponse
 from starlette.middleware.cors import CORSMiddleware
 
-from config import DEFAULT_TABLE, MINIO_ACCESS_KEY, MINIO_SECRET_KEY, MINIO_ADDR
+from config import DEFAULT_TABLE
 from config import HTTP_PORT
 from load import do_load
 from logs import LOGGER
@@ -25,7 +25,7 @@ app.add_middleware(
 MODEL = Resnet50()
 MILVUS_CLI = MilvusHelper()
 MYSQL_CLI = MySQLHelper()
-MINIO_CLI = MinioHelper(MINIO_ADDR, MINIO_ACCESS_KEY, MINIO_SECRET_KEY)
+MINIO_CLI = MinioHelper()
 
 
 @app.get("/ping")

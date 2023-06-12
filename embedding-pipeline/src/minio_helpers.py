@@ -3,16 +3,20 @@ import os
 
 from minio import Minio
 
-from config import MINIO_BUCKET_NAME
+from config import MINIO_BUCKET_NAME, MINIO_ENDPOINT, MINIO_ACCESS_KEY, MINIO_SECRET_KEY
 from config import MINIO_DOWNLOAD_PATH
 from logs import LOGGER
 
 
 class MinioHelper(object):
-    def __init__(self, addr, access_key, secret_key, secure=False, bucket_name=MINIO_BUCKET_NAME):
+    def __init__(self, endpoint=MINIO_ENDPOINT,
+                 access_key=MINIO_ACCESS_KEY,
+                 secret_key=MINIO_SECRET_KEY,
+                 secure=False,
+                 bucket_name=MINIO_BUCKET_NAME):
         self.bucket_name = bucket_name
         self.minio_client = Minio(
-            addr,
+            endpoint,
             access_key=access_key,
             secret_key=secret_key,
             secure=secure
@@ -45,6 +49,20 @@ class MinioHelper(object):
         except Exception as e:
             LOGGER.error(f'Failed to upload object {object_name} from {file_path}: {e}')
             return False
+
+    def upload_file(self, file_path: str) -> str:
+        """
+        Upload file to Minio bucket and return object name
+        :param file_path: local file path
+        :return: object name if upload successful, empty string otherwise
+        """
+        object_name = calculate_md5(file_path)
+        if object_name == '':
+            return ''
+        if self.upload(object_name, file_path):
+            return object_name
+        else:
+            return ''
 
     def download(self, object_name: str, download_path: str) -> bool:
         """

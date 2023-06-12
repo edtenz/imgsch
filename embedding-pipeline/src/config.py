@@ -7,7 +7,7 @@ LOGS_NUM = int(os.getenv("logs_num", "0"))
 HTTP_PORT = os.getenv("HTTP_PORT", "8090")
 
 ############### Minio Configuration ###############
-MINIO_ADDR = os.getenv("MINIO_HOST", "localhost:9000")
+MINIO_ENDPOINT = os.getenv("MINIO_ENDPOINT", "localhost:9000")
 MINIO_ACCESS_KEY = os.getenv("MINIO_ACCESS_KEY", "minioadmin")
 MINIO_SECRET_KEY = os.getenv("MINIO_SECRET_KEY", "minioadmin")
 MINIO_BUCKET_NAME = os.getenv("MINIO_BUCKET_NAME", "imgsch")
