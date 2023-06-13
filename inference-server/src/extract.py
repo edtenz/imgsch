@@ -9,8 +9,10 @@ class Extractor(object):
 
     def __init__(self):
         self.auto_config = AutoConfig.LocalCPUConfig()
+        # timm.list_models(pretrained=True)
+        # supported models list: https://towhee.io/image-embedding/timm
         # self.model_name = 'resnet50'
-        self.model_name = 'vit_large_patch16_224'
+        self.model_name = 'vit_tiny_patch16_224'
         self.feature_pipeline = (
             pipe.input('url', 'box')
             .map('url', 'img', ops.image_decode.cv2_rgb())  # decode image
