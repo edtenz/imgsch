@@ -35,7 +35,7 @@ def resize_image(image_path: str, width: int, height: int, output_dir: str, qual
     return output_path
 
 
-def thumbnail(image_path, max_size, output_dir, quality=70) -> str:
+def thumbnail(image_path: str, max_size: int, output_dir: str, quality=70) -> str:
     """
     Thumbnail the image to max_size and save it to the output_dir
     Args:
