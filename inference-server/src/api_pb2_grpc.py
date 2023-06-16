@@ -15,12 +15,12 @@ class FeatureServiceStub(object):
             channel: A grpc.Channel.
         """
         self.Detect = channel.unary_unary(
-                '/FeatureService/Detect',
+                '/api.FeatureService/Detect',
                 request_serializer=api__pb2.DetectRequest.SerializeToString,
                 response_deserializer=api__pb2.DetectResponse.FromString,
                 )
         self.Extract = channel.unary_unary(
-                '/FeatureService/Extract',
+                '/api.FeatureService/Extract',
                 request_serializer=api__pb2.ExtractRequest.SerializeToString,
                 response_deserializer=api__pb2.ExtractResponse.FromString,
                 )
@@ -56,7 +56,7 @@ def add_FeatureServiceServicer_to_server(servicer, server):
             ),
     }
     generic_handler = grpc.method_handlers_generic_handler(
-            'FeatureService', rpc_method_handlers)
+            'api.FeatureService', rpc_method_handlers)
     server.add_generic_rpc_handlers((generic_handler,))
 
 
@@ -75,7 +75,7 @@ class FeatureService(object):
             wait_for_ready=None,
             timeout=None,
             metadata=None):
-        return grpc.experimental.unary_unary(request, target, '/FeatureService/Detect',
+        return grpc.experimental.unary_unary(request, target, '/api.FeatureService/Detect',
             api__pb2.DetectRequest.SerializeToString,
             api__pb2.DetectResponse.FromString,
             options, channel_credentials,
@@ -92,7 +92,7 @@ class FeatureService(object):
             wait_for_ready=None,
             timeout=None,
             metadata=None):
-        return grpc.experimental.unary_unary(request, target, '/FeatureService/Extract',
+        return grpc.experimental.unary_unary(request, target, '/api.FeatureService/Extract',
             api__pb2.ExtractRequest.SerializeToString,
             api__pb2.ExtractResponse.FromString,
             options, channel_credentials,

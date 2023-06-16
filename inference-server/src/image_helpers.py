@@ -1,3 +1,4 @@
+import hashlib
 import os
 
 from PIL import Image
@@ -59,3 +60,48 @@ def thumbnail(image_path: str, max_size: int, output_dir: str, quality=70) -> st
 
     image.save(output_path, optimize=True, quality=quality)
     return output_path
+
+
+def md5_hash(content: bytes) -> str:
+    """
+    Calculate MD5 hash of content
+    :param content: content to calculate MD5 hash
+    :return: md5 hash of content
+    """
+    return hashlib.md5(content).hexdigest()
+
+
+def calculate_md5(file_path: str) -> str:
+    """
+    Calculate MD5 hash of file
+    :param file_path: path to file
+    :return: md5 hash of file
+    """
+    try:
+        with open(file_path, 'rb') as f:
+            file_content = f.read()
+            if file_content:
+                return hashlib.md5(file_content).hexdigest()
+            else:
+                print(f"File '{file_path}' is empty.")
+                return ''
+    except FileNotFoundError:
+        print(f"File '{file_path}' not found.")
+        return ''
+    except IOError as e:
+        print(f"Error reading file '{file_path}': {str(e)}")
+        return ''
+    except Exception as e:
+        print(f"Error calculating MD5 hash of file '{file_path}': {str(e)}")
+        return ''
+
+
+def get_image_dimensions(file_path) -> tuple[int, int]:
+    """
+    Get image dimensions
+    :param file_path:  image file path
+    :return:  image dimensions, width and height
+    """
+    with Image.open(file_path) as image:
+        width, height = image.size
+        return width, height

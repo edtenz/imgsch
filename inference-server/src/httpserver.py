@@ -6,6 +6,8 @@ from config import HTTP_PORT
 from detect import DETECTOR
 from extract import EXTRACTOR
 from logs import LOGGER
+from minio_helpers import MINIO_CLIENT
+from operations import do_detect, do_extract
 
 app = FastAPI()
 
@@ -20,7 +22,7 @@ def ping():
 def detect_img(key: str):
     try:
         LOGGER.debug(f"detect image: {key}")
-        bboxes = [item.to_dict() for item in DETECTOR.detect(key)]
+        bboxes = [item.to_dict() for item in do_detect(key, MINIO_CLIENT, DETECTOR)]
         LOGGER.info(f"Successfully detect image: {key}, bboxes: {bboxes}")
         return JSONResponse({'status': True, 'msg': 'success', 'data': bboxes})
     except Exception as e:
@@ -34,7 +36,7 @@ def extract_imag(key: str, bbox: str):
         LOGGER.debug(f"extract image: {key} with bbox: {bbox}")
         # split bbox by comma
         box = get_bbox(bbox)
-        features = EXTRACTOR.extract(key, box)
+        features = do_extract(key, MINIO_CLIENT, EXTRACTOR, box)
 
         LOGGER.info(f"Successfully extract image: {key}, feature: {features[:5]}, length: {len(features)}")
         return JSONResponse({'status': True, 'msg': 'success', 'data': features.tolist()})

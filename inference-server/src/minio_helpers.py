@@ -1,4 +1,3 @@
-import hashlib
 import os
 
 from minio import Minio
@@ -66,55 +65,23 @@ class MinioClient(object):
             return False
 
 
-def md5_hash(content: bytes) -> str:
+def download_object(object_name: str,
+                    minio_cli: MinioClient,
+                    download_dir: str = MINIO_DOWNLOAD_PATH) -> str:
     """
-    Calculate MD5 hash of content
-    :param content: content to calculate MD5 hash
-    :return: md5 hash of content
-    """
-    return hashlib.md5(content).hexdigest()
+    Download object from Minio bucket to local file system
+    Args:
+        object_name: object name in Minio bucket
+        minio_cli: minio client
+        download_dir: download directory in local file system
 
+    Returns: download path in local file system
 
-def calculate_md5(file_path: str) -> str:
-    """
-    Calculate MD5 hash of file
-    :param file_path: path to file
-    :return: md5 hash of file
-    """
-    try:
-        with open(file_path, 'rb') as f:
-            file_content = f.read()
-            if file_content:
-                md5_hash = hashlib.md5(file_content).hexdigest()
-                return md5_hash
-            else:
-                print(f"File '{file_path}' is empty.")
-                return ''
-    except FileNotFoundError:
-        print(f"File '{file_path}' not found.")
-        return ''
-    except IOError as e:
-        print(f"Error reading file '{file_path}': {str(e)}")
-        return ''
-    except Exception as e:
-        print(f"Error calculating MD5 hash of file '{file_path}': {str(e)}")
-        return ''
-
-
-MINIO_CLIENT = MinioClient()
-
-
-def download_object(object_name: str, download_dir=MINIO_DOWNLOAD_PATH) -> str:
-    """
-    Download object from Minio bucket to local directory
-    :param object_name: object name in Minio bucket
-    :param download_dir: download directory in local file system
-    :return:  download path in local file system
     """
     if not os.path.exists(download_dir):
         os.makedirs(download_dir)
     download_path = os.path.join(download_dir, object_name)
-    ok = MINIO_CLIENT.download(object_name, download_path)
+    ok = minio_cli.download(object_name, download_path)
     if ok:
         return download_path
     else:
@@ -135,3 +102,6 @@ def remove_local_object(object_name: str, download_dir=MINIO_DOWNLOAD_PATH) -> b
     except Exception as e:
         LOGGER.error(f'Failed to remove object {object_name} from {download_dir}: {e}')
         return False
+
+
+MINIO_CLIENT = MinioClient()

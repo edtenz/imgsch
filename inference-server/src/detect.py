@@ -1,9 +1,6 @@
 from pydantic import BaseModel
 from towhee import pipe, ops, AutoConfig
 
-from logs import LOGGER
-from minio_helpers import download_object, remove_local_object
-
 
 class BoundingBox(BaseModel):
     box: list[int]
@@ -33,15 +30,15 @@ class Detector(object):
             .output('url', 'box', 'class', 'score')  # output
         )
 
-    def detect_file(self, image_file: str) -> list[BoundingBox]:
+    def detectr(self, url: str) -> list[BoundingBox]:
         """
         Detect object from local file or url
-        :param image_file: is the local file path
+        :param url: is url or the local file path
         :return: list of BoundingBox
         """
 
         bboxes = []
-        res = self.obj_pipeline(image_file)
+        res = self.obj_pipeline(url)
         if res.size == 0:
             return bboxes
 
@@ -50,23 +47,6 @@ class Detector(object):
             # print('{}: url: {}, box: {}, class: {}, score: {}'.format(i, item[0], item[1], item[2], item[3]))
             bbox = BoundingBox(box=item[1], score=item[3], label=item[2])
             bboxes.append(bbox)
-        return bboxes
-
-    def detect(self, key: str) -> list[BoundingBox]:
-        """
-        Detect object from minio object
-        :param key: is the object key in minio
-        :return: list of BoundingBox
-        """
-        bboxes = []
-        download_path = download_object(key)
-        if download_path == '':
-            LOGGER.error('download object failed, key: {}'.format(key))
-            return bboxes
-
-        bboxes = self.detect_file(download_path)
-        LOGGER.debug('detect file: {}'.format(bboxes))
-        remove_local_object(key)
         return bboxes
 
 
