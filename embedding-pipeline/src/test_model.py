@@ -33,8 +33,9 @@ def create_milvus_collection(collection_name: str = DEFAULT_TABLE, dim: int = 19
         utility.drop_collection(collection_name)
 
     fields = [
-        FieldSchema(name='key', dtype=DataType.VARCHAR, description='image key', max_length=500,
+        FieldSchema(name='key', dtype=DataType.VARCHAR, description='image key', max_length=40,
                     is_primary=True, auto_id=False),
+        FieldSchema(name='sbox', dtype=DataType.VARCHAR, description='image box', max_length=20),
         FieldSchema(name='vec', dtype=DataType.FLOAT_VECTOR, description='image embedding vectors', dim=dim)
     ]
     schema = CollectionSchema(fields=fields, description='reverse image search')
@@ -42,7 +43,7 @@ def create_milvus_collection(collection_name: str = DEFAULT_TABLE, dim: int = 19
 
     index_params = {
         'metric_type': 'L2',
-        'index_type': 'IVF_FLAT',
+        'index_type': 'IVF_SQ8',
         'params': {"nlist": dim}
     }
     collection.create_index(field_name='vec', index_params=index_params)
@@ -58,18 +59,19 @@ def test_vit224_extract_pipeline():
     model = Vit224()
     p_insert = (
         model.pipeline()
-        .map(('key', 'vec'), 'mr', ops.ann_insert.milvus_client(
+        .map(('key', 'sbox', 'vec'), 'mr', ops.ann_insert.milvus_client(
             host=MILVUS_HOST,
             port=MILVUS_PORT,
             collection_name=DEFAULT_TABLE,
         ))
-        .output('mr')
+        .output('key', 'sbox', 'mr')
     )
     res = p_insert('../data/objects.png')
     size = res.size
     print(f'Insert {size} vectors')
     for i in range(size):
-        print(res.get())
+        it = res.get()
+        print(f'{i}, key: {it[0]}, box: {it[1]}, mr: {it[2]}')
 
     print('Number of data inserted:', collection.num_entities)
 
@@ -79,12 +81,12 @@ def test_vit224_extract_pipeline():
         .map('vec', ('search_res'), ops.ann_search.milvus_client(
             host=MILVUS_HOST, port=MILVUS_PORT, limit=10,
             collection_name=DEFAULT_TABLE))
-        .map('search_res', 'pred', lambda x: [y[0] for y in x])
-        .output('url', 'pred')
+        .map('search_res', ('pred', 'distance'), lambda x: ([y[0] for y in x], [y[1] for y in x]))
+        .output('pred', 'distance')
     )
     collection.load()
-    res = p_search_pre('../data/objects.png')
+    res = p_search_pre('../data/fruit.png')
     print(f'Number of search results: {res.size}')
     for i in range(res.size):
         it = res.get()
-        print(f'{i}, url: {it[0]}, key: {it[1]}')
+        print(f'{i}, pred: {it[0]}, distance: {it[1]}')

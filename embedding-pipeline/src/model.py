@@ -39,7 +39,10 @@ class Model(object):
             .map('url', 'img', ops.image_decode.cv2_rgb())
             .map('url', 'key', image_helper.md5_file)  # decode image
             .flat_map('img', ('box', 'label', 'score'), ops.object_detection.yolo())  # detect object
+            .filter(('key', 'img', 'box', 'label', 'score'), ('key', 'img', 'box', 'label', 'score'),
+                    'score', lambda x: x > 0.6)
             .flat_map(('img', 'box'), 'object', ops.towhee.image_crop())  # crop object
+            .map('box', 'sbox', lambda x: ",".join(str(item) for item in x))  # box string
             .map('object', 'vec', ops.image_embedding.timm(model_name=model_name))  # extract feature
             .map('vec', 'vec', ops.towhee.np_normalize())
         )
