@@ -5,11 +5,11 @@ import image_helper
 from logger import LOGGER
 from milvus_helpers import MilvusClient
 from minio_helpers import MinioClient
-from model import Vit224
+from model import Model
 from mysql_helpers import MysqlClient
 
 
-def extract_features(img_dir: str, model: Vit224) -> (list[float], list[str]):
+def extract_features(img_dir: str, model: Model) -> (list[float], list[str]):
     """
     Extract features from images
     :param img_dir:
@@ -47,7 +47,7 @@ def format_data(ids, names):
 
 def do_load(table_name: str,
             image_dir: str,
-            model: Vit224,
+            model: Model,
             milvus_client: MilvusClient,
             mysql_cli: MysqlClient,
             minio_cli: MinioClient) -> int:
@@ -72,25 +72,28 @@ def do_load(table_name: str,
 
 
 def process(img_path: str,
-            model: Vit224,
+            model: Model,
             milvus_client: MilvusClient,
             mysql_cli: MysqlClient,
             minio_cli: MinioClient,
             table_name=DEFAULT_TABLE) -> int:
-    object_name = minio_cli.upload_file(img_path)
-    if object_name == '':
+    obj_feat = model.extract_primary_features(img_path)
+    if not obj_feat:
+        return 0
+
+    ok = minio_cli.upload(object_name=obj_feat.key, file_path=img_path)
+    if not ok:
         LOGGER.warn(f"Upload file failed: {img_path}")
         return 0
-    feat = model.extract_features(img_path)
-    if len(feat) == 0:
+    if len(obj_feat.features) == 0:
         LOGGER.warn(f"Extract feature failed: {img_path}")
         return 0
-    vectors = [feat]
+    vectors = [obj_feat.features]
     ids = milvus_client.insert(table_name, vectors)
     if len(ids) == 0:
         LOGGER.warn(f"Insert vectors failed: {img_path}")
         return 0
-    names = [object_name]
+    names = [obj_feat.key]
     mysql_cli.load_data_to_mysql(table_name, format_data(ids, names))
     LOGGER.debug(f"Process file {img_path} successfully")
     return len(ids)

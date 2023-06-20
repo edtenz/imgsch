@@ -29,47 +29,17 @@ class ObjectFeature(BaseModel):
         return self.to_dict().__str__()
 
 
-class Resnet50(object):
+class Model(object):
 
-    def __init__(self):
+    def __init__(self, model_name: str):
         self.auto_config = AutoConfig.LocalCPUConfig()
-        self.model_name = 'resnet50'
-        # self.model_name = 'vit_tiny_patch16_224'
-        self.feature_pipeline = (
-            pipe.input('url')
-            .map('url', 'img', ops.image_decode.cv2_rgb())  # decode image
-            .flat_map('img', ('box', 'class', 'score'), ops.object_detection.yolo())  # detect object
-            .flat_map(('img', 'box'), 'object', ops.towhee.image_crop())  # crop object
-            .map('object', 'embedding', ops.image_embedding.timm(model_name=self.model_name))  # extract feature
-            .map('embedding', 'embedding', ops.towhee.np_normalize())
-            .output('embedding')  # output
-        )
-
-    def extract_features(self, url: str) -> list[float]:
-        """
-        Extract feature from local file or url
-        :param url: url or local file path
-        :return: features
-        """
-        res = self.feature_pipeline(url)
-        if res.size == 0:
-            return []
-        # take the first object and features
-        return res.get()[0]
-
-
-class Vit224(object):
-
-    def __init__(self):
-        self.auto_config = AutoConfig.LocalCPUConfig()
-        self.model_name = 'vit_tiny_patch16_224'
         self.feature_pipeline = (
             pipe.input('url')
             .map('url', 'img', ops.image_decode.cv2_rgb())
             .map('url', 'key', image_helper.md5_file)  # decode image
             .flat_map('img', ('box', 'label', 'score'), ops.object_detection.yolo())  # detect object
             .flat_map(('img', 'box'), 'object', ops.towhee.image_crop())  # crop object
-            .map('object', 'embedding', ops.image_embedding.timm(model_name=self.model_name))  # extract feature
+            .map('object', 'embedding', ops.image_embedding.timm(model_name=model_name))  # extract feature
             .map('embedding', 'embedding', ops.towhee.np_normalize())
             .output('key', 'box', 'label', 'score', 'embedding')  # output
         )
@@ -90,12 +60,45 @@ class Vit224(object):
 
         for i in range(res.size):
             it = res.get()
-            obj_feat = ObjectFeature(url=url, key=it[0], box=tuple(it[1]),
-                                     label=it[2], score=it[3],
+            obj_feat = ObjectFeature(url=url,
+                                     key=it[0],
+                                     box=tuple(it[1]),
+                                     label=it[2],
+                                     score=it[3],
                                      features=it[4].tolist())
             # append to list
             obj_feat_list.append(obj_feat)
-            # take the first 5 objects
-            if i > 4:
+            # take the first 3 objects
+            if i > 2:
                 break
         return obj_feat_list
+
+    def extract_primary_features(self, url: str) -> ObjectFeature:
+        """
+        Extract feature from local file or url
+        :param url: url or local file path
+        :return: object features
+        """
+        res = self.pipeline(url)
+        if res.size == 0:
+            return None
+
+        it = res.get()
+        return ObjectFeature(url=url,
+                             key=it[0],
+                             box=tuple(it[1]),
+                             label=it[2],
+                             score=it[3],
+                             features=it[4].tolist())
+
+
+class Resnet50(Model):
+
+    def __init__(self):
+        super().__init__('resnet50')
+
+
+class Vit224(Model):
+
+    def __init__(self):
+        super().__init__('vit_tiny_patch16_224')

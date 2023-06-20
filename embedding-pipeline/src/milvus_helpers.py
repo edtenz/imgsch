@@ -61,9 +61,8 @@ class MilvusClient(object):
             LOGGER.debug(f"Successfully drop collection: {collection_name}")
         return "ok"
 
-    def insert(self, collection_name: str, vectors):
+    def insert(self, collection: Collection, vectors: list[float]) -> list[int]:
         # Batch insert vectors to milvus collection
-        collection = self.get_collection(collection_name)
         data = [vectors]
         mr = collection.insert(data)
         ids = mr.primary_keys
