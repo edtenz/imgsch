@@ -1,4 +1,8 @@
-from src.model import Resnet50, Vit224
+from pymilvus import FieldSchema, CollectionSchema, DataType, Collection, utility, connections
+from towhee import ops
+
+from config import MILVUS_HOST, MILVUS_PORT, DEFAULT_TABLE
+from model import Resnet50, Vit224
 
 
 def test_resnet50_extract_features():
@@ -24,11 +28,63 @@ def test_vit224_extract_primary_features():
     assert len(obj_feat.features) == 192
 
 
+def create_milvus_collection(collection_name: str = DEFAULT_TABLE, dim: int = 192):
+    if utility.has_collection(collection_name):
+        utility.drop_collection(collection_name)
+
+    fields = [
+        FieldSchema(name='key', dtype=DataType.VARCHAR, description='image key', max_length=500,
+                    is_primary=True, auto_id=False),
+        FieldSchema(name='vec', dtype=DataType.FLOAT_VECTOR, description='image embedding vectors', dim=dim)
+    ]
+    schema = CollectionSchema(fields=fields, description='reverse image search')
+    collection = Collection(name=collection_name, schema=schema)
+
+    index_params = {
+        'metric_type': 'L2',
+        'index_type': 'IVF_FLAT',
+        'params': {"nlist": dim}
+    }
+    collection.create_index(field_name='vec', index_params=index_params)
+    return collection
+
+
 def test_vit224_extract_pipeline():
+    connections.connect(host=MILVUS_HOST, port=MILVUS_PORT)
+
+    collection = create_milvus_collection(DEFAULT_TABLE, 192)
+    print(f'A new collection created: {DEFAULT_TABLE}')
+
     model = Vit224()
-    res = model.pipeline('../data/objects.png')
+    p_insert = (
+        model.pipeline()
+        .map(('key', 'vec'), 'mr', ops.ann_insert.milvus_client(
+            host=MILVUS_HOST,
+            port=MILVUS_PORT,
+            collection_name=DEFAULT_TABLE,
+        ))
+        .output('mr')
+    )
+    res = p_insert('../data/objects.png')
     size = res.size
-    print('size:', size)
+    print(f'Insert {size} vectors')
     for i in range(size):
+        print(res.get())
+
+    print('Number of data inserted:', collection.num_entities)
+
+    # Search pipeline
+    p_search_pre = (
+        model.pipeline()
+        .map('vec', ('search_res'), ops.ann_search.milvus_client(
+            host=MILVUS_HOST, port=MILVUS_PORT, limit=10,
+            collection_name=DEFAULT_TABLE))
+        .map('search_res', 'pred', lambda x: [y[0] for y in x])
+        .output('url', 'pred')
+    )
+    collection.load()
+    res = p_search_pre('../data/objects.png')
+    print(f'Number of search results: {res.size}')
+    for i in range(res.size):
         it = res.get()
-        print(it[0], it[1], it[2], it[3])
+        print(f'{i}, url: {it[0]}, key: {it[1]}')

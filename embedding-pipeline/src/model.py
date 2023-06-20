@@ -1,5 +1,6 @@
 from pydantic import BaseModel
 from towhee import pipe, ops, AutoConfig
+
 import image_helper
 
 
@@ -39,13 +40,12 @@ class Model(object):
             .map('url', 'key', image_helper.md5_file)  # decode image
             .flat_map('img', ('box', 'label', 'score'), ops.object_detection.yolo())  # detect object
             .flat_map(('img', 'box'), 'object', ops.towhee.image_crop())  # crop object
-            .map('object', 'embedding', ops.image_embedding.timm(model_name=model_name))  # extract feature
-            .map('embedding', 'embedding', ops.towhee.np_normalize())
-            .output('key', 'box', 'label', 'score', 'embedding')  # output
+            .map('object', 'vec', ops.image_embedding.timm(model_name=model_name))  # extract feature
+            .map('vec', 'vec', ops.towhee.np_normalize())
         )
 
-    def pipeline(self, url: str):
-        return self.feature_pipeline(url)
+    def pipeline(self):
+        return self.feature_pipeline
 
     def extract_features(self, url: str) -> list[ObjectFeature]:
         """
@@ -53,8 +53,12 @@ class Model(object):
         :param url: url or local file path
         :return: object features
         """
+        p = (
+            self.pipeline()
+            .output('key', 'box', 'label', 'score', 'vec')
+        )
         obj_feat_list = []
-        res = self.pipeline(url)
+        res = p(url)
         if res.size == 0:
             return obj_feat_list
 
@@ -79,7 +83,11 @@ class Model(object):
         :param url: url or local file path
         :return: object features
         """
-        res = self.pipeline(url)
+        p = (
+            self.pipeline()
+            .output('key', 'box', 'label', 'score', 'vec')
+        )
+        res = p(url)
         if res.size == 0:
             return None
 
