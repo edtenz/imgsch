@@ -28,9 +28,3 @@ run:
 	@echo "Running..."
 	python src/main.py
 
-
-.PHONY proto:
-proto:
-	#python -m grpc_tools.protoc -I ./api --python_out=./src --grpc_python_out=./src ./api/api.proto
-	python -m grpc_tools.protoc --proto_path=./api ./api/api.proto --python_out=./src --grpc_python_out=./src
-

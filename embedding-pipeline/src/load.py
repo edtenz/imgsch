@@ -1,37 +1,31 @@
-import hashlib
-import os
 import sys
 
 from config import DEFAULT_TABLE
-from logs import LOGGER
+from image_helper import md5_file, get_images
+from logger import LOGGER
 from milvus_helpers import MilvusHelper
 from minio_helpers import MinioHelper
-from model import Resnet50
+from model import Vit224
 from mysql_helpers import MySQLHelper
 
 
-# Get the path to the image
-def get_imgs(path):
-    pics = []
-    for f in os.listdir(path):
-        if ((f.endswith(extension) for extension in
-             ['.png', '.jpg', '.jpeg', '.PNG', '.JPG', '.JPEG']) and not f.startswith('.DS_Store')):
-            pics.append(os.path.join(path, f))
-    return pics
-
-
-# Get the vector of images
-def extract_features(img_dir: str, model: Resnet50) -> (list[float], list[str]):
+def extract_features(img_dir: str, model: Vit224) -> (list[float], list[str]):
+    """
+    Extract features from images
+    :param img_dir:
+    :param model:
+    :return:
+    """
     try:
         feats = []
         names = []
-        img_list = get_imgs(img_dir)
+        img_list = get_images(img_dir)
         total = len(img_list)
         for i, img_path in enumerate(img_list):
             try:
                 norm_feat = model.extract_features(img_path)
                 feats.append(norm_feat)
-                names.append(calculate_md5(img_path))
+                names.append(md5_file(img_path))
                 print(f"Extracting feature from image No. {i + 1} , {total} images in total")
             except Exception as e:
                 LOGGER.error(f"Error with extracting feature from image {e}")
@@ -51,26 +45,6 @@ def format_data(ids, names):
     return data
 
 
-def calculate_md5(file_path: str) -> str:
-    """
-    Calculate MD5 hash of file
-    :param file_path: path to file
-    :return: md5 hash of file
-    """
-    try:
-        with open(file_path, 'rb') as f:
-            file_content = f.read()
-            if file_content:
-                md5_hash = hashlib.md5(file_content).hexdigest()
-                return md5_hash
-            else:
-                print(f"File '{file_path}' is empty.")
-                return ''
-    except Exception as e:
-        print(f"Error calculating MD5 hash of file '{file_path}': {str(e)}")
-        return ''
-
-
 def do_load(table_name, image_dir, model, milvus_client, mysql_cli, minio_cli) -> int:
     if not table_name:
         table_name = DEFAULT_TABLE
@@ -78,7 +52,7 @@ def do_load(table_name, image_dir, model, milvus_client, mysql_cli, minio_cli) -
     milvus_client.create_index(table_name)
     mysql_cli.create_mysql_table(table_name)
 
-    img_list = get_imgs(image_dir)
+    img_list = get_images(image_dir)
     total = len(img_list)
     success_count = 0
     for i, img_path in enumerate(img_list):
@@ -91,7 +65,7 @@ def do_load(table_name, image_dir, model, milvus_client, mysql_cli, minio_cli) -
 
 
 def process(img_path: str,
-            model: Resnet50,
+            model: Vit224,
             milvus_client: MilvusHelper,
             mysql_cli: MySQLHelper,
             minio_cli: MinioHelper,

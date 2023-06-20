@@ -1,0 +1,6 @@
+
+### index
+GET localhost:8090/ping
+
+### load
+GET localhost:8090/load?img_dir=/Users/edtenz/Downloads/samples

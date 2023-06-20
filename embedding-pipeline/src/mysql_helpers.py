@@ -3,7 +3,7 @@ import sys
 import pymysql
 
 from config import MYSQL_HOST, MYSQL_PORT, MYSQL_USER, MYSQL_PWD, MYSQL_DB
-from logs import LOGGER
+from logger import LOGGER
 
 
 class MySQLHelper(object):

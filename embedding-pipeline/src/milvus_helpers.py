@@ -3,7 +3,7 @@ import sys
 from pymilvus import connections, FieldSchema, CollectionSchema, DataType, Collection, utility
 
 from config import MILVUS_HOST, MILVUS_PORT, VECTOR_DIMENSION, METRIC_TYPE
-from logs import LOGGER
+from logger import LOGGER
 
 
 class MilvusHelper(object):

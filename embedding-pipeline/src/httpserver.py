@@ -6,10 +6,10 @@ from starlette.middleware.cors import CORSMiddleware
 from config import DEFAULT_TABLE
 from config import HTTP_PORT
 from load import do_load
-from logs import LOGGER
+from logger import LOGGER
 from milvus_helpers import MilvusHelper
 from minio_helpers import MinioHelper
-from model import Resnet50
+from model import Vit224
 from mysql_helpers import MySQLHelper
 
 app = FastAPI()
@@ -22,7 +22,9 @@ app.add_middleware(
     allow_headers=["*"],
 
 )
-MODEL = Resnet50()
+
+# MODEL = Resnet50()
+MODEL = Vit224()
 MILVUS_CLI = MilvusHelper()
 MYSQL_CLI = MySQLHelper()
 MINIO_CLI = MinioHelper()
