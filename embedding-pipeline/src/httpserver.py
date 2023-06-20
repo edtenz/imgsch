@@ -7,10 +7,10 @@ from config import DEFAULT_TABLE
 from config import HTTP_PORT
 from load import do_load
 from logger import LOGGER
-from milvus_helpers import MilvusHelper
-from minio_helpers import MinioHelper
+from milvus_helpers import MilvusClient
+from minio_helpers import MinioClient
 from model import Vit224
-from mysql_helpers import MySQLHelper
+from mysql_helpers import MysqlClient
 
 app = FastAPI()
 origins = ["*"]
@@ -25,9 +25,9 @@ app.add_middleware(
 
 # MODEL = Resnet50()
 MODEL = Vit224()
-MILVUS_CLI = MilvusHelper()
-MYSQL_CLI = MySQLHelper()
-MINIO_CLI = MinioHelper()
+MILVUS_CLI = MilvusClient()
+MYSQL_CLI = MysqlClient()
+MINIO_CLI = MinioClient()
 
 
 @app.get("/ping")

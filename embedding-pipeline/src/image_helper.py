@@ -1,5 +1,8 @@
+import csv
 import hashlib
 import os
+from glob import glob
+from pathlib import Path
 
 
 def md5_file(file_path: str) -> str:
@@ -38,3 +41,10 @@ def get_images(path):
              ['.png', '.jpg', '.jpeg', '.PNG', '.JPG', '.JPEG']) and not f.startswith('.DS_Store')):
             pics.append(os.path.join(path, f))
     return pics
+
+
+def load_image(path: str):
+    for f in os.listdir(path):
+        if ((f.endswith(extension) for extension in
+             ['.png', '.jpg', '.jpeg', '.PNG', '.JPG', '.JPEG']) and not f.startswith('.DS_Store')):
+            yield os.path.join(path, f)

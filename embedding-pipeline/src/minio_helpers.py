@@ -7,7 +7,7 @@ from image_helper import md5_file
 from logger import LOGGER
 
 
-class MinioHelper(object):
+class MinioClient(object):
     def __init__(self, endpoint=MINIO_ENDPOINT,
                  access_key=MINIO_ACCESS_KEY,
                  secret_key=MINIO_SECRET_KEY,
@@ -62,3 +62,6 @@ class MinioHelper(object):
             return object_name
         else:
             return ''
+
+
+MINIO_CLIENT = MinioClient()

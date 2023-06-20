@@ -6,11 +6,13 @@ from config import MYSQL_HOST, MYSQL_PORT, MYSQL_USER, MYSQL_PWD, MYSQL_DB
 from logger import LOGGER
 
 
-class MySQLHelper(object):
+class MysqlClient(object):
 
-    def __init__(self):
-        self.conn = pymysql.connect(host=MYSQL_HOST, user=MYSQL_USER, port=MYSQL_PORT, password=MYSQL_PWD,
-                                    database=MYSQL_DB,
+    def __init__(self, host: str = MYSQL_HOST, port: int = MYSQL_PORT,
+                 user: str = MYSQL_USER, pwd: str = MYSQL_PWD,
+                 db: str = MYSQL_DB):
+        self.conn = pymysql.connect(host=host, user=user, port=port, password=pwd,
+                                    database=db,
                                     local_infile=True)
         self.cursor = self.conn.cursor()
 
@@ -95,3 +97,6 @@ class MySQLHelper(object):
         except Exception as e:
             LOGGER.error(f"MYSQL ERROR: {e} with sql: {sql}")
             sys.exit(1)
+
+
+MYSQL_CLIENT = MysqlClient()

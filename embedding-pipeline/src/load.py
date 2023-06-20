@@ -3,10 +3,10 @@ import sys
 from config import DEFAULT_TABLE
 import image_helper
 from logger import LOGGER
-from milvus_helpers import MilvusHelper
-from minio_helpers import MinioHelper
+from milvus_helpers import MilvusClient
+from minio_helpers import MinioClient
 from model import Vit224
-from mysql_helpers import MySQLHelper
+from mysql_helpers import MysqlClient
 
 
 def extract_features(img_dir: str, model: Vit224) -> (list[float], list[str]):
@@ -48,13 +48,15 @@ def format_data(ids, names):
 def do_load(table_name: str,
             image_dir: str,
             model: Vit224,
-            milvus_client: MilvusHelper,
-            mysql_cli: MySQLHelper,
-            minio_cli: MinioHelper) -> int:
+            milvus_client: MilvusClient,
+            mysql_cli: MysqlClient,
+            minio_cli: MinioClient) -> int:
     if not table_name:
         table_name = DEFAULT_TABLE
 
-    milvus_client.create_index(table_name)
+    if not milvus_client.has_collection(table_name):
+        milvus_client.create_collection(table_name)
+
     mysql_cli.create_mysql_table(table_name)
 
     img_list = image_helper.get_images(image_dir)
@@ -71,9 +73,9 @@ def do_load(table_name: str,
 
 def process(img_path: str,
             model: Vit224,
-            milvus_client: MilvusHelper,
-            mysql_cli: MySQLHelper,
-            minio_cli: MinioHelper,
+            milvus_client: MilvusClient,
+            mysql_cli: MysqlClient,
+            minio_cli: MinioClient,
             table_name=DEFAULT_TABLE) -> int:
     object_name = minio_cli.upload_file(img_path)
     if object_name == '':
