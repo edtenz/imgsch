@@ -5,7 +5,7 @@ from fastapi.responses import JSONResponse
 from config import HTTP_PORT
 from detect import DETECTOR
 from extract import EXTRACTOR
-from logs import LOGGER
+from logger import LOGGER
 from minio_helpers import MINIO_CLIENT
 from operations import do_detect, do_extract
 

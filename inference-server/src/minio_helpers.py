@@ -3,7 +3,7 @@ import os
 from minio import Minio
 
 from config import MINIO_ENDPOINT, MINIO_ACCESS_KEY, MINIO_SECRET_KEY, MINIO_BUCKET_NAME, MINIO_DOWNLOAD_PATH
-from logs import LOGGER
+from logger import LOGGER
 
 
 class MinioClient(object):

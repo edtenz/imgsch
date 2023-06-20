@@ -1,7 +1,7 @@
 from towhee import pipe, ops, AutoConfig
 
 from image_helpers import get_image_dimensions
-from logs import LOGGER
+from logger import LOGGER
 
 
 class Extractor(object):

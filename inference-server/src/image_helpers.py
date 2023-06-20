@@ -71,7 +71,7 @@ def md5_hash(content: bytes) -> str:
     return hashlib.md5(content).hexdigest()
 
 
-def calculate_md5(file_path: str) -> str:
+def md5_file(file_path: str) -> str:
     """
     Calculate MD5 hash of file
     :param file_path: path to file

@@ -30,7 +30,7 @@ class Detector(object):
             .output('url', 'box', 'class', 'score')  # output
         )
 
-    def detectr(self, url: str) -> list[BoundingBox]:
+    def detect(self, url: str) -> list[BoundingBox]:
         """
         Detect object from local file or url
         :param url: is url or the local file path

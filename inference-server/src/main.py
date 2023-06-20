@@ -1,7 +1,4 @@
-import sys
 import threading
-
-sys.path.append("../api")
 
 from grpcserver import start_grpc_server
 from httpserver import start_http_server

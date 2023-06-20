@@ -12,7 +12,7 @@ def test_upload():
 
 def test_download():
     img_path = '../data/objects.png'
-    download_path = '../data/objects_downloaded.png'
+    download_path = '../data/tmp/objects_downloaded.png'
     object_name = md5_file(img_path)
     print(object_name)
     ok = MINIO_CLIENT.download(object_name, download_path)
@@ -22,5 +22,5 @@ def test_download():
 
 def test_download2():
     object_name = '224d11f6b5d17a73c4d03546b433410a'
-    download_path = download_object(object_name)
+    download_path = download_object(object_name, MINIO_CLIENT)
     assert download_path != '' "Download failed"

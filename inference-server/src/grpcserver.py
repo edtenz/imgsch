@@ -7,7 +7,7 @@ import api_pb2_grpc as pb2_grpc
 from config import GRPC_PORT
 from detect import DETECTOR
 from extract import EXTRACTOR
-from logs import LOGGER
+from logger import LOGGER
 from minio_helpers import MINIO_CLIENT
 from operations import do_detect, do_extract
 
