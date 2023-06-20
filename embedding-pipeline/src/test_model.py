@@ -63,14 +63,14 @@ def test_vit224_extract_pipeline():
             port=MILVUS_PORT,
             collection_name=DEFAULT_TABLE,
         ))
-        .output('key', 'sbox', 'mr')
+        .output('key', 'sbox', 'label', 'mr', 'url')
     )
     res = p_insert('../data/objects.png')
     size = res.size
     print(f'Insert {size} vectors')
     for i in range(size):
         it = res.get()
-        print(f'{i}, key: {it[0]}, box: {it[1]}, mr: {it[2]}')
+        print(f'{i}, key: {it[0]}, box: {it[1]}, label: {it[2]}, mr: {it[3]}, url: {it[4]}')
 
     print('Number of data inserted:', collection.num_entities)
 
@@ -84,7 +84,7 @@ def test_vit224_extract_pipeline():
         .output('pred', 'distance', 'search_res')
     )
     collection.load()
-    res = p_search_pre('../data/objects.png')
+    res = p_search_pre('../data/fruit.png')
     print(f'Number of search results: {res.size}')
     for i in range(res.size):
         it = res.get()
