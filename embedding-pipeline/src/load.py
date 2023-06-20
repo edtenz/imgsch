@@ -1,7 +1,7 @@
 import sys
 
 from config import DEFAULT_TABLE
-from image_helper import md5_file, get_images
+import image_helper
 from logger import LOGGER
 from milvus_helpers import MilvusHelper
 from minio_helpers import MinioHelper
@@ -19,13 +19,13 @@ def extract_features(img_dir: str, model: Vit224) -> (list[float], list[str]):
     try:
         feats = []
         names = []
-        img_list = get_images(img_dir)
+        img_list = image_helper.get_images(img_dir)
         total = len(img_list)
         for i, img_path in enumerate(img_list):
             try:
                 norm_feat = model.extract_features(img_path)
                 feats.append(norm_feat)
-                names.append(md5_file(img_path))
+                names.append(image_helper.md5_file(img_path))
                 print(f"Extracting feature from image No. {i + 1} , {total} images in total")
             except Exception as e:
                 LOGGER.error(f"Error with extracting feature from image {e}")
@@ -45,14 +45,19 @@ def format_data(ids, names):
     return data
 
 
-def do_load(table_name, image_dir, model, milvus_client, mysql_cli, minio_cli) -> int:
+def do_load(table_name: str,
+            image_dir: str,
+            model: Vit224,
+            milvus_client: MilvusHelper,
+            mysql_cli: MySQLHelper,
+            minio_cli: MinioHelper) -> int:
     if not table_name:
         table_name = DEFAULT_TABLE
 
     milvus_client.create_index(table_name)
     mysql_cli.create_mysql_table(table_name)
 
-    img_list = get_images(image_dir)
+    img_list = image_helper.get_images(image_dir)
     total = len(img_list)
     success_count = 0
     for i, img_path in enumerate(img_list):
