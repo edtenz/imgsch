@@ -56,9 +56,6 @@ def do_load(
         minio_cli: MinioClient,
         table_name: str = DEFAULT_TABLE,
         dim: int = VECTOR_DIMENSION) -> int:
-    if not table_name:
-        table_name = DEFAULT_TABLE
-
     collection = milvus_client.create_collection(table_name, dim)
     LOGGER.info(f"Collection information: {table_name}")
 
@@ -92,13 +89,15 @@ def process(img_path: str,
             table_name: str = DEFAULT_TABLE) -> bool:
     p_insert = (
         model.pipeline()
-        .map(('key', 'url'), 'upload_res', minio_cli.upload)
+        # .map(('key', 'url'), 'upload_res', minio_cli.upload)
+        .map(('key', 'url'), 'upload_res', lambda key, url: (key, url))
         .map(('key', 'vec'), 'mr', ops.ann_insert.milvus_client(
             host=MILVUS_HOST,
             port=MILVUS_PORT,
             collection_name=table_name,
         ))
-        .map(('key', 'sbox', 'score'), 'db_res', mysql_cli.insert_into)
+        # .map(('key', 'sbox', 'score'), 'db_res', mysql_cli.insert_into)
+        .map(('key', 'sbox', 'score'), 'db_res', lambda key, sbox, score: (key, sbox, score))
         .output('url', 'key', 'sbox', 'label', 'score', 'mr', 'upload_res', 'db_res')
     )
     res = p_insert(img_path)
