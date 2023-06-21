@@ -89,7 +89,7 @@ def process(img_path: str,
             mysql_cli: MysqlClient,
             minio_cli: MinioClient,
             collection: Collection,
-            table_name=DEFAULT_TABLE) -> bool:
+            table_name: str = DEFAULT_TABLE) -> bool:
     p_insert = (
         model.pipeline()
         .map(('key', 'url'), 'upload_res', minio_cli.upload)
