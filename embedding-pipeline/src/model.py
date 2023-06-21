@@ -34,13 +34,17 @@ class Model(object):
 
     def __init__(self, model_name: str):
         self.auto_config = AutoConfig.LocalCPUConfig()
-        self.feature_pipeline = (
+        self.detect_pipeline = (
             pipe.input('url')
-            .map('url', 'img', ops.image_decode.cv2_rgb())
-            .map('url', 'key', image_helper.md5_file)  # decode image
+            .filter(('url'), ('url'), 'url', lambda x: x is not None)  # filter invalid url
+            .map('url', 'key', image_helper.md5_file)  # generate key
+            .map('url', 'img', ops.image_decode.cv2_rgb())  # decode image
             .flat_map('img', ('box', 'label', 'score'), ops.object_detection.yolo())  # detect object
-            .filter(('key', 'img', 'box', 'label', 'score'), ('key', 'img', 'box', 'label', 'score'),
+            .filter(('url', 'key', 'img', 'box', 'label', 'score'), ('url', 'key', 'img', 'box', 'label', 'score'),
                     'score', lambda x: x > 0.6)
+        )
+        self.extract_pipeline = (
+            self.detect_pipeline
             .flat_map(('img', 'box'), 'object', ops.towhee.image_crop())  # crop object
             .map('box', 'sbox', lambda x: ",".join(str(item) for item in x))  # box string
             .map('object', 'vec', ops.image_embedding.timm(model_name=model_name))  # extract feature
@@ -48,7 +52,11 @@ class Model(object):
         )
 
     def pipeline(self):
-        return self.feature_pipeline
+        """
+        Get feature pipeline
+        :return: pipeline: output('url', 'key', 'box', 'label', 'score', 'vec')
+        """
+        return self.extract_pipeline
 
     def extract_features(self, url: str) -> list[ObjectFeature]:
         """
@@ -58,7 +66,7 @@ class Model(object):
         """
         p = (
             self.pipeline()
-            .output('key', 'box', 'label', 'score', 'vec')
+            .output('url', 'key', 'box', 'label', 'score', 'vec')
         )
         obj_feat_list = []
         res = p(url)
@@ -67,12 +75,12 @@ class Model(object):
 
         for i in range(res.size):
             it = res.get()
-            obj_feat = ObjectFeature(url=url,
-                                     key=it[0],
-                                     box=tuple(it[1]),
-                                     label=it[2],
-                                     score=it[3],
-                                     features=it[4].tolist())
+            obj_feat = ObjectFeature(url=it[0],
+                                     key=it[1],
+                                     box=tuple(it[2]),
+                                     label=it[3],
+                                     score=it[4],
+                                     features=it[5].tolist())
             # append to list
             obj_feat_list.append(obj_feat)
             # take the first 3 objects
@@ -88,19 +96,19 @@ class Model(object):
         """
         p = (
             self.pipeline()
-            .output('key', 'box', 'label', 'score', 'vec')
+            .output('url', 'key', 'box', 'label', 'score', 'vec')
         )
         res = p(url)
         if res.size == 0:
             return None
 
         it = res.get()
-        return ObjectFeature(url=url,
-                             key=it[0],
-                             box=tuple(it[1]),
-                             label=it[2],
-                             score=it[3],
-                             features=it[4].tolist())
+        return ObjectFeature(url=it[0],
+                             key=it[1],
+                             box=tuple(it[2]),
+                             label=it[3],
+                             score=it[4],
+                             features=it[5].tolist())
 
 
 class Resnet50(Model):
@@ -109,7 +117,13 @@ class Resnet50(Model):
         super().__init__('resnet50')
 
 
-class Vit224(Model):
+class VitTiny224(Model):
 
     def __init__(self):
         super().__init__('vit_tiny_patch16_224')
+
+
+class VitBase224(Model):
+
+    def __init__(self):
+        super().__init__('vit_base_patch16_224')

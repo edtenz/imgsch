@@ -3,14 +3,13 @@ from fastapi import FastAPI
 from fastapi.responses import JSONResponse
 from starlette.middleware.cors import CORSMiddleware
 
-from config import DEFAULT_TABLE
 from config import HTTP_PORT
 from load import do_load
 from logger import LOGGER
-from milvus_helpers import MilvusClient
-from minio_helpers import MinioClient
-from model import Vit224
-from mysql_helpers import MysqlClient
+from milvus_helpers import MILVUS_CLIENT
+from minio_helpers import MINIO_CLIENT
+from model import VitBase224
+from mysql_helpers import MYSQL_CLIENT
 
 app = FastAPI()
 origins = ["*"]
@@ -24,10 +23,7 @@ app.add_middleware(
 )
 
 # MODEL = Resnet50()
-MODEL = Vit224()
-MILVUS_CLI = MilvusClient()
-MYSQL_CLI = MysqlClient()
-MINIO_CLI = MinioClient()
+MODEL = VitBase224()
 
 
 @app.get("/ping")
@@ -40,7 +36,7 @@ def ping():
 def load_img(img_dir: str):
     try:
         LOGGER.debug(f"detect image: {img_dir}")
-        count = do_load(DEFAULT_TABLE, img_dir, MODEL, MILVUS_CLI, MYSQL_CLI, MINIO_CLI)
+        count = do_load(img_dir, MODEL, MILVUS_CLIENT, MYSQL_CLIENT, MINIO_CLIENT)
         return JSONResponse({'status': True, 'msg': 'success', 'data': count})
     except Exception as e:
         LOGGER.error(f"Get image error: {e}")
