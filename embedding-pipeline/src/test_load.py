@@ -9,5 +9,9 @@ MODEL = VitBase224()
 
 def test_process():
     img_dir = '../data'
-    count = do_load(img_dir, MODEL, MILVUS_CLIENT, MYSQL_CLIENT, MINIO_CLIENT)
+    table_name = 'test_collection'
+    test_bucket_name = 'mybucket'
+    dim = 768
+    vit_model = VitBase224()
+    count = do_load(img_dir, vit_model, MILVUS_CLIENT, MYSQL_CLIENT, MINIO_CLIENT, test_bucket_name, table_name, dim)
     print(count)

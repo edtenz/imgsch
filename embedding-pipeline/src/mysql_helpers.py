@@ -31,6 +31,7 @@ class MysqlClient(object):
           image_key VARCHAR(50) NOT NULL,
           box VARCHAR(30),
           score FLOAT,
+          label VARCHAR(50),
           INDEX idx_image_key (image_key),
           UNIQUE KEY idx_image_box (image_key, box)
         );
@@ -45,13 +46,15 @@ class MysqlClient(object):
             LOGGER.error(f"MYSQL ERROR: {e} with sql: {sql}")
             raise Exception("MYSQL ERROR: {} with sql: {}".format(e, sql))
 
-    def insert_into(self, image_key: str, box: str, score: float = 0.0, table_name: str = DEFAULT_TABLE) -> bool:
+    def insert_into(self, vec_id: int,
+                    image_key: str, box: str, score: float = 0.0, label: str = '',
+                    table_name: str = DEFAULT_TABLE) -> bool:
         # Batch insert (Milvus_ids, img_path) to mysql
         self.test_connection()
         add_data = ("INSERT INTO {} "
-                    "(image_key, box, score) "
-                    "VALUES (%s, %s, %s)".format(table_name))
-        data = (image_key, box, score)
+                    "(id, image_key, box, score, label) "
+                    "VALUES (%s, %s, %s, %s, %s)".format(table_name))
+        data = (vec_id, image_key, box, score, label)
         try:
             self.cursor.execute(add_data, data)
             self.conn.commit()
@@ -96,6 +99,13 @@ class MysqlClient(object):
         except Exception as e:
             LOGGER.error(f"MYSQL ERROR: {e} with sql: {sql}")
             raise Exception("MYSQL ERROR: {} with sql: {}".format(e, sql))
+
+
+def insert_mysql_ops(mysql_cli: MysqlClient, table_name: str = DEFAULT_TABLE) -> callable:
+    def wrapper(vec_id: int, image_key: str, box: str, score: float = 0.0, label: str = '') -> bool:
+        return mysql_cli.insert_into(vec_id, image_key, box, score, label, table_name)
+
+    return wrapper
 
 
 MYSQL_CLIENT = MysqlClient()
