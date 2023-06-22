@@ -69,7 +69,7 @@ def do_load(
     success_count = 0
     for i, img_path in enumerate(img_list):
         LOGGER.info(f"Process file {img_path}, {i + 1}/{total}")
-        ok = process(img_path, model, milvus_client, mysql_cli, minio_cli, bucket_name, table_name)
+        ok = load_pipeline(img_path, model, milvus_client, mysql_cli, minio_cli, bucket_name, table_name)
         if ok:
             success_count += 1
 
@@ -81,13 +81,13 @@ def do_load(
     return success_count
 
 
-def process(img_path: str,
-            model: Model,
-            milvus_client: MilvusClient,
-            mysql_cli: MysqlClient,
-            minio_cli: MinioClient,
-            bucket_name: str = MINIO_BUCKET_NAME,
-            table_name: str = DEFAULT_TABLE) -> bool:
+def load_pipeline(img_path: str,
+                  model: Model,
+                  milvus_client: MilvusClient,
+                  mysql_cli: MysqlClient,
+                  minio_cli: MinioClient,
+                  bucket_name: str = MINIO_BUCKET_NAME,
+                  table_name: str = DEFAULT_TABLE) -> bool:
     p_insert = (
         model.pipeline()
         # .map(('key', 'url'), 'upload_res', lambda key, url: (key, url))
