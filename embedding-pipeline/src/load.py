@@ -1,5 +1,3 @@
-import sys
-
 import image_helper
 from config import DEFAULT_TABLE, VECTOR_DIMENSION, MINIO_BUCKET_NAME
 from logger import LOGGER
@@ -7,42 +5,6 @@ from milvus_helpers import MilvusClient, insert_milvus_ops
 from minio_helpers import MinioClient, upload_minio_ops
 from model import Model
 from mysql_helpers import MysqlClient, insert_mysql_ops
-
-
-def extract_features(img_dir: str, model: Model) -> (list[float], list[str]):
-    """
-    Extract features from images
-    :param img_dir:
-    :param model:
-    :return:
-    """
-    try:
-        feats = []
-        names = []
-        img_list = image_helper.get_images(img_dir)
-        total = len(img_list)
-        for i, img_path in enumerate(img_list):
-            try:
-                norm_feat = model.extract_features(img_path)
-                feats.append(norm_feat)
-                names.append(image_helper.gen_file_key(img_path))
-                print(f"Extracting feature from image No. {i + 1} , {total} images in total")
-            except Exception as e:
-                LOGGER.error(f"Error with extracting feature from image {e}")
-                continue
-        return feats, names
-    except Exception as e:
-        LOGGER.error(f"Error with extracting feature from image {e}")
-        sys.exit(1)
-
-
-# Combine the id of the vector and the name of the image into a list
-def format_data(ids, names):
-    data = []
-    for i in range(len(ids)):
-        value = (str(ids[i]), names[i])
-        data.append(value)
-    return data
 
 
 def do_load(

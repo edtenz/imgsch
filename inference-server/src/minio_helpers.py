@@ -16,8 +16,7 @@ class MinioClient(object):
         self.minio_client = Minio(endpoint=endpoint,
                                   access_key=access_key,
                                   secret_key=secret_key,
-                                  secure=secure
-                                  )
+                                  secure=secure)
 
         if not self.minio_client.bucket_exists(self.bucket_name):
             self.minio_client.make_bucket(bucket_name)

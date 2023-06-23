@@ -4,3 +4,23 @@ GET localhost:8090/ping
 
 ### load
 GET localhost:8090/load?img_dir=/Users/edtenz/Downloads/samples&table_name=milvus_imgsch_tab
+
+
+
+### download
+GET localhost:8090/img/3e9d9b345430b8f4a32817173593faf3.jpg
+
+
+### search
+# curl -X POST -F "file=@/path/to/image.jpg" http://localhost:8080/upload
+POST localhost:8090/search
+Content-Type: multipart/form-data; boundary=WebAppBoundary
+
+--WebAppBoundary
+Content-Disposition: form-data; name="file"; filename="image.jpg"
+
+< ../data/bicycle.jpg
+--WebAppBoundary--
+
+###
+

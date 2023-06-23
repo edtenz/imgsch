@@ -131,4 +131,27 @@ def download_minio_ops(minio_cli: MinioClient,
     return wrapper
 
 
+def download_object(minio_cli: MinioClient,
+                    object_name: str,
+                    download_dir: str = MINIO_DOWNLOAD_PATH) -> str:
+    """
+    Download object from Minio bucket to local file system
+    Args:
+        object_name: object name in Minio bucket
+        minio_cli: minio client
+        download_dir: download directory in local file system
+
+    Returns: download path in local file system
+
+    """
+    if not os.path.exists(download_dir):
+        os.makedirs(download_dir)
+    download_path = os.path.join(download_dir, object_name)
+    ok = minio_cli.download(object_name, download_path)
+    if ok:
+        return download_path
+    else:
+        return ''
+
+
 MINIO_CLIENT = MinioClient()
