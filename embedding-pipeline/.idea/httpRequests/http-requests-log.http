@@ -1,0 +1,253 @@
+GET http://localhost:8090/img/44cffb7fe6339ad06e4f046ae52fa987.jpg
+Connection: Keep-Alive
+User-Agent: Apache-HttpClient/4.5.14 (Java/17.0.6)
+Accept-Encoding: br,deflate,gzip,x-gzip
+
+<> 2023-06-23T224315.200.jpeg
+
+###
+
+GET http://localhost:8090/img/62dae8e3f7869feca4b897627dccfd58.png
+Connection: Keep-Alive
+User-Agent: Apache-HttpClient/4.5.14 (Java/17.0.6)
+Accept-Encoding: br,deflate,gzip,x-gzip
+
+<> 2023-06-23T224249.200.jpeg
+
+###
+
+POST http://localhost:8090/search
+Content-Type: multipart/form-data; boundary=WebAppBoundary
+Content-Length: 668284
+Connection: Keep-Alive
+User-Agent: Apache-HttpClient/4.5.14 (Java/17.0.6)
+Accept-Encoding: br,deflate,gzip,x-gzip
+
+--WebAppBoundary
+Content-Disposition: form-data; name="file"; filename="image.png"
+
+< /Users/edtenz/Workspaces/edtenz-repo/imgsch/embedding-pipeline/data/objects.png
+--WebAppBoundary--
+
+<> 2023-06-23T224234.200.json
+
+###
+
+GET http://localhost:8090/img/3e9d9b345430b8f4a32817173593faf3.jpg
+Connection: Keep-Alive
+User-Agent: Apache-HttpClient/4.5.14 (Java/17.0.6)
+Accept-Encoding: br,deflate,gzip,x-gzip
+
+<> 2023-06-23T224125.200.jpeg
+
+###
+
+GET http://localhost:8090/img/bcdd2ab1c03386b4e0e837e9f25bed90.jpg
+Connection: Keep-Alive
+User-Agent: Apache-HttpClient/4.5.14 (Java/17.0.6)
+Accept-Encoding: br,deflate,gzip,x-gzip
+
+<> 2023-06-23T224052.200.jpeg
+
+###
+
+POST http://localhost:8090/search
+Content-Type: multipart/form-data; boundary=WebAppBoundary
+Content-Length: 104006
+Connection: Keep-Alive
+User-Agent: Apache-HttpClient/4.5.14 (Java/17.0.6)
+Accept-Encoding: br,deflate,gzip,x-gzip
+
+--WebAppBoundary
+Content-Disposition: form-data; name="file"; filename="image.jpg"
+
+< /Users/edtenz/Workspaces/edtenz-repo/imgsch/embedding-pipeline/data/bicycle.jpg
+--WebAppBoundary--
+
+<> 2023-06-23T224007.200.json
+
+###
+
+POST http://localhost:8090/search
+Content-Type: multipart/form-data; boundary=WebAppBoundary
+Content-Length: 104006
+Connection: Keep-Alive
+User-Agent: Apache-HttpClient/4.5.14 (Java/17.0.6)
+Accept-Encoding: br,deflate,gzip,x-gzip
+
+--WebAppBoundary
+Content-Disposition: form-data; name="file"; filename="image.jpg"
+
+< /Users/edtenz/Workspaces/edtenz-repo/imgsch/embedding-pipeline/data/bicycle.jpg
+--WebAppBoundary--
+
+<> 2023-06-23T223912.500.txt
+
+###
+
+POST http://localhost:8090/search
+Content-Type: multipart/form-data; boundary=WebAppBoundary
+Content-Length: 668284
+Connection: Keep-Alive
+User-Agent: Apache-HttpClient/4.5.14 (Java/17.0.6)
+Accept-Encoding: br,deflate,gzip,x-gzip
+
+--WebAppBoundary
+Content-Disposition: form-data; name="file"; filename="image.jpg"
+
+< /Users/edtenz/Workspaces/edtenz-repo/imgsch/embedding-pipeline/data/objects.png
+--WebAppBoundary--
+
+<> 2023-06-23T223807.500.txt
+
+###
+
+POST http://localhost:8090/search
+Content-Type: multipart/form-data; boundary=WebAppBoundary
+Content-Length: 668284
+Connection: Keep-Alive
+User-Agent: Apache-HttpClient/4.5.14 (Java/17.0.6)
+Accept-Encoding: br,deflate,gzip,x-gzip
+
+--WebAppBoundary
+Content-Disposition: form-data; name="file"; filename="image.jpg"
+
+< /Users/edtenz/Workspaces/edtenz-repo/imgsch/embedding-pipeline/data/objects.png
+--WebAppBoundary--
+
+<> 2023-06-23T223757.500.txt
+
+###
+
+POST http://localhost:8090/search
+Content-Type: multipart/form-data; boundary=WebAppBoundary
+Content-Length: 668284
+Connection: Keep-Alive
+User-Agent: Apache-HttpClient/4.5.14 (Java/17.0.6)
+Accept-Encoding: br,deflate,gzip,x-gzip
+
+--WebAppBoundary
+Content-Disposition: form-data; name="file"; filename="image.jpg"
+
+< /Users/edtenz/Workspaces/edtenz-repo/imgsch/embedding-pipeline/data/objects.png
+--WebAppBoundary--
+
+<> 2023-06-23T220934.200.json
+
+###
+
+POST http://localhost:8090/search
+Content-Type: multipart/form-data; boundary=WebAppBoundary
+Content-Length: 668284
+Connection: Keep-Alive
+User-Agent: Apache-HttpClient/4.5.14 (Java/17.0.6)
+Accept-Encoding: br,deflate,gzip,x-gzip
+
+--WebAppBoundary
+Content-Disposition: form-data; name="file"; filename="image.jpg"
+
+< /Users/edtenz/Workspaces/edtenz-repo/imgsch/embedding-pipeline/data/objects.png
+--WebAppBoundary--
+
+<> 2023-06-23T220648.500.txt
+
+###
+
+POST http://localhost:8090/search
+Content-Type: multipart/form-data; boundary=WebAppBoundary
+Content-Length: 668284
+Connection: Keep-Alive
+User-Agent: Apache-HttpClient/4.5.14 (Java/17.0.6)
+Accept-Encoding: br,deflate,gzip,x-gzip
+
+--WebAppBoundary
+Content-Disposition: form-data; name="file"; filename="image.jpg"
+
+< /Users/edtenz/Workspaces/edtenz-repo/imgsch/embedding-pipeline/data/objects.png
+--WebAppBoundary--
+
+<> 2023-06-23T220459.404.json
+
+###
+
+GET http://localhost:8090/img/44cffb7fe6339ad06e4f046ae52fa987.jpg
+Connection: Keep-Alive
+User-Agent: Apache-HttpClient/4.5.14 (Java/17.0.6)
+Accept-Encoding: br,deflate,gzip,x-gzip
+
+<> 2023-06-23T215629.200.jpeg
+
+###
+
+GET http://localhost:8090/load?img_dir=/Users/edtenz/Downloads/samples&table_name=milvus_imgsch_tab
+Connection: Keep-Alive
+User-Agent: Apache-HttpClient/4.5.14 (Java/17.0.6)
+Accept-Encoding: br,deflate,gzip,x-gzip
+
+<> 2023-06-23T200353.200.json
+
+###
+
+GET http://localhost:8090/load?img_dir=/Users/edtenz/Downloads/samples&table_name=milvus_imgsch_tab
+Connection: Keep-Alive
+User-Agent: Apache-HttpClient/4.5.14 (Java/17.0.6)
+Accept-Encoding: br,deflate,gzip,x-gzip
+
+<> 2023-06-23T085619.200.json
+
+###
+
+GET http://localhost:8090/load?img_dir=/Users/edtenz/Downloads/samples
+Connection: Keep-Alive
+User-Agent: Apache-HttpClient/4.5.14 (Java/17.0.6)
+Accept-Encoding: br,deflate,gzip,x-gzip
+
+<> 2023-06-21T085602.200.json
+
+###
+
+GET http://localhost:8090/load?img_dir=/Users/edtenz/Downloads/samples
+Connection: Keep-Alive
+User-Agent: Apache-HttpClient/4.5.14 (Java/17.0.6)
+Accept-Encoding: br,deflate,gzip,x-gzip
+
+<> 2023-06-21T085027.200.json
+
+###
+
+GET http://localhost:8090/load?img_dir=/Users/edtenz/Downloads/samples
+Connection: Keep-Alive
+User-Agent: Apache-HttpClient/4.5.14 (Java/17.0.6)
+Accept-Encoding: br,deflate,gzip,x-gzip
+
+<> 2023-06-21T084904.200.json
+
+###
+
+GET http://localhost:8090/load?img_dir=/Users/edtenz/Downloads/samples
+Connection: Keep-Alive
+User-Agent: Apache-HttpClient/4.5.14 (Java/17.0.6)
+Accept-Encoding: br,deflate,gzip,x-gzip
+
+<> 2023-06-21T084301.200.json
+
+###
+
+GET http://localhost:8090/load?img_dir=/Users/edtenz/Downloads/samples
+Connection: Keep-Alive
+User-Agent: Apache-HttpClient/4.5.14 (Java/17.0.6)
+Accept-Encoding: br,deflate,gzip,x-gzip
+
+<> 2023-06-21T084105.200.json
+
+###
+
+GET http://localhost:8090/load?img_dir=/Users/zhizhang.teng/Downloads/samples/parts
+Connection: Keep-Alive
+User-Agent: Apache-HttpClient/4.5.14 (Java/17.0.6)
+Accept-Encoding: br,deflate,gzip,x-gzip
+
+<> 2023-06-21T083959.200.json
+
+###
+

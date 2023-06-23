@@ -8,7 +8,7 @@ GET localhost:8090/load?img_dir=/Users/edtenz/Downloads/samples&table_name=milvu
 
 
 ### download
-GET localhost:8090/img/3e9d9b345430b8f4a32817173593faf3.jpg
+GET localhost:8090/img/44cffb7fe6339ad06e4f046ae52fa987.jpg
 
 
 ### search
@@ -17,9 +17,9 @@ POST localhost:8090/search
 Content-Type: multipart/form-data; boundary=WebAppBoundary
 
 --WebAppBoundary
-Content-Disposition: form-data; name="file"; filename="image.jpg"
+Content-Disposition: form-data; name="file"; filename="image.png"
 
-< ../data/bicycle.jpg
+< ../data/objects.png
 --WebAppBoundary--
 
 ###
