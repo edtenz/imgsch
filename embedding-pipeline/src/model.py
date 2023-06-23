@@ -34,22 +34,28 @@ class Model(object):
 
     def __init__(self, model_name: str):
         self.auto_config = AutoConfig.LocalCPUConfig()
-        self.detect_pipeline = (
+
+        self.name_pipeline = (
             pipe.input('url')
             .filter(('url'), ('url'), 'url', lambda x: x is not None)  # filter invalid url
-            .map('url', 'key', image_helper.md5_file)  # generate key
+            .map('url', 'key', image_helper.gen_file_key)  # generate key based on file content
+        )  # name pipeline for generate key
+
+        self.detect_pipeline = (
+            self.name_pipeline
             .map('url', 'img', ops.image_decode.cv2_rgb())  # decode image
             .flat_map('img', ('box', 'label', 'score'), ops.object_detection.yolo())  # detect object
-            .filter(('url', 'key', 'img', 'box', 'label', 'score'), ('url', 'key', 'img', 'box', 'label', 'score'),
+            .filter(('img', 'box', 'label', 'score'), ('img', 'box', 'label', 'score'),
                     'score', lambda x: x > 0.6)
-        )
+        )  # detect pipeline for detect objects in image
+
         self.extract_pipeline = (
             self.detect_pipeline
             .flat_map(('img', 'box'), 'object', ops.towhee.image_crop())  # crop object
             .map('box', 'sbox', lambda x: ",".join(str(item) for item in x))  # box string
             .map('object', 'vec', ops.image_embedding.timm(model_name=model_name))  # extract feature
             .map('vec', 'vec', ops.towhee.np_normalize())
-        )
+        )  # extract pipeline for extract features from objects
 
     def pipeline(self):
         """

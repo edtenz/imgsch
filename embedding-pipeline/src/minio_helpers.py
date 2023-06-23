@@ -2,8 +2,8 @@ import os
 
 from minio import Minio
 
-from config import MINIO_ENDPOINT, MINIO_ACCESS_KEY, MINIO_SECRET_KEY, MINIO_BUCKET_NAME
-from image_helper import md5_file
+from config import MINIO_ENDPOINT, MINIO_ACCESS_KEY, MINIO_SECRET_KEY, MINIO_BUCKET_NAME, MINIO_DOWNLOAD_PATH
+from image_helper import gen_file_key
 from logger import LOGGER
 
 
@@ -66,7 +66,7 @@ class MinioClient(object):
         :param bucket_name: bucket name
         :return: object name if upload successful, empty string otherwise
         """
-        object_name = md5_file(file_path)
+        object_name = gen_file_key(file_path)
         if object_name == '':
             return ''
         if self.upload(object_name, file_path, bucket_name):
@@ -111,6 +111,22 @@ def upload_minio_ops(minio_cli: MinioClient, bucket_name: str = MINIO_BUCKET_NAM
         if minio_cli.exists_object(key, bucket_name):
             return True
         return minio_cli.upload(key, url, bucket_name)
+
+    return wrapper
+
+
+def download_minio_ops(minio_cli: MinioClient,
+                       bucket_name: str = MINIO_BUCKET_NAME,
+                       download_dir: str = MINIO_DOWNLOAD_PATH) -> callable:
+    def wrapper(object_name: str) -> str:
+        if not minio_cli.exists_object(object_name, bucket_name):
+            LOGGER.error(f'Object {object_name} does not exist in bucket {bucket_name}')
+            return ''
+        file_path = os.path.join(download_dir, object_name)
+        if minio_cli.download(object_name, file_path, bucket_name):
+            return file_path
+        LOGGER.error(f'Failed to download object {object_name} from bucket {bucket_name}')
+        return ''
 
     return wrapper
 

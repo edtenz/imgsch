@@ -2,11 +2,29 @@ import hashlib
 import os
 
 
+def gen_file_key(file_path: str) -> str:
+    """
+    Generate MD5 hash of file
+    :param file_path: path to file
+    :return: md5 hash of file
+    """
+    # get file suffix
+    suffix = os.path.splitext(file_path)[1]
+    # suffix to lower case
+    suffix = suffix.lower()
+    # generate md5 hash of file
+    md5_hash = md5_file(file_path)
+    if md5_hash == '':
+        return ''
+    # return file key
+    return f'{md5_hash}{suffix}'
+
+
 def md5_file(file_path: str) -> str:
     """
     Calculate MD5 hash of file
-    :param file_path: path to file
-    :return: md5 hash of file
+    :param file_path:
+    :return:
     """
     try:
         with open(file_path, 'rb') as f:

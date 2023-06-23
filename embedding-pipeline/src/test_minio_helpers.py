@@ -1,10 +1,10 @@
-from minio_helpers import MINIO_CLIENT
-from image_helper import md5_file
+from image_helper import gen_file_key
+from minio_helpers import MINIO_CLIENT, download_minio_ops
 
 
 def test_upload_file():
     img_file = '../data/objects.png'
-    image_key = md5_file(img_file)
+    image_key = gen_file_key(img_file)
     if MINIO_CLIENT.exists_object(image_key):
         print(f'object {image_key} exists')
 
@@ -13,3 +13,10 @@ def test_upload_file():
 
     res = MINIO_CLIENT.download(image_key, '../objects-2.png')
     print(f'object {image_key} downloaded {res}')
+
+
+def test_download_minio_ops():
+    key = '9880b8dd5e520f50c437be21372440f5'
+    d = download_minio_ops(MINIO_CLIENT)
+    img_path = d(key)
+    print(f'object {key} downloaded to {img_path}')

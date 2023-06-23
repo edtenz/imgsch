@@ -25,7 +25,7 @@ def extract_features(img_dir: str, model: Model) -> (list[float], list[str]):
             try:
                 norm_feat = model.extract_features(img_path)
                 feats.append(norm_feat)
-                names.append(image_helper.md5_file(img_path))
+                names.append(image_helper.gen_file_key(img_path))
                 print(f"Extracting feature from image No. {i + 1} , {total} images in total")
             except Exception as e:
                 LOGGER.error(f"Error with extracting feature from image {e}")
@@ -51,9 +51,9 @@ def do_load(
         milvus_client: MilvusClient,
         mysql_cli: MysqlClient,
         minio_cli: MinioClient,
-        bucket_name: str = MINIO_BUCKET_NAME,
         table_name: str = DEFAULT_TABLE,
         dim: int = VECTOR_DIMENSION) -> int:
+    bucket_name = MINIO_BUCKET_NAME
     minio_cli.create_bucket(bucket_name)
     LOGGER.info(f"Bucket information: {bucket_name}")
 

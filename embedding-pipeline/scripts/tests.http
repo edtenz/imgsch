@@ -3,4 +3,4 @@
 GET localhost:8090/ping
 
 ### load
-GET localhost:8090/load?img_dir=/Users/edtenz/Downloads/samples
+GET localhost:8090/load?img_dir=/Users/edtenz/Downloads/samples&table_name=milvus_imgsch_tab

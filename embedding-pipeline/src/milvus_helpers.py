@@ -144,4 +144,17 @@ def insert_milvus_ops(milvus_cli: MilvusClient, collection_name: str = DEFAULT_T
     return wrapper
 
 
+def search_milvus_ops(milvus_cli: MilvusClient, collection_name: str = DEFAULT_TABLE, top_k: int = 10) -> callable:
+    def wrapper(vector: list[float]) -> list[(int, float)]:
+        sr = milvus_cli.search_vectors(collection_name, vector, top_k)
+        if sr is None:
+            return []
+        res = []
+        for it in sr:
+            res.append((it[0].id, it[0].distance))
+        return res
+
+    return wrapper
+
+
 MILVUS_CLIENT = MilvusClient()
