@@ -27,6 +27,7 @@ func init() {
 	flag.Parse()
 }
 
+// minio-proxy -endpoint localhost:9090 -key minioadmin -secret minioadmin -ssl false
 func main() {
 	s3Cli := NewS3Client(&S3Config{
 		Endpoint:     flags.Endpoint,
