@@ -30,7 +30,7 @@ func init() {
 	log.Printf("flags: %+v\n", flags)
 }
 
-// minio-proxy -endpoint localhost:9090 -key minioadmin -secret minioadmin -ssl false
+// minio-proxy -endpoint localhost:9090 -key minioadmin -secret minioadmin -ssl false -port 10086
 func main() {
 	s3Cli := NewS3Client(&S3Config{
 		Endpoint:     flags.Endpoint,
