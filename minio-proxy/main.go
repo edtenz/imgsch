@@ -3,9 +3,11 @@ package main
 import (
 	"bytes"
 	"context"
+	"errors"
 	"fmt"
 	"github.com/gin-gonic/gin"
 	"github.com/minio/minio-go"
+	"io"
 	"log"
 )
 
@@ -41,6 +43,8 @@ func NewWebServer(port int, s3Cli *S3Client) *WebServer {
 }
 
 func (ws *WebServer) Start() {
+	ws.router.GET("/api", ws.handleLisBuckets)
+	ws.router.GET("/api/:bucket", ws.handleListFiles)
 	ws.router.GET("/api/:bucket/:key", ws.handleGetObject)
 
 	// Start the HTTP server
@@ -52,11 +56,41 @@ func (ws *WebServer) Start() {
 	}
 }
 
+func (ws *WebServer) handleLisBuckets(c *gin.Context) {
+	log.Println("list buckets")
+	buckets, err := ws.s3Cli.ListBuckets()
+	if err != nil {
+		_ = c.AbortWithError(500, err)
+		return
+	}
+
+	log.Println("list buckets success, buckets:", buckets)
+
+	c.JSON(200, buckets)
+}
+
+func (ws *WebServer) handleListFiles(c *gin.Context) {
+	bucket := c.Param("bucket")
+	if bucket == "" {
+		_ = c.AbortWithError(400, errors.New("bucket name is empty"))
+		return
+	}
+	log.Println("list bucket objects:", bucket)
+	flist := ws.s3Cli.ListFiles(bucket, "")
+	log.Println("list bucket objects success, objects size:", len(flist))
+	c.JSON(200, flist)
+}
+
 func (ws *WebServer) handleGetObject(c *gin.Context) {
 	bucket := c.Param("bucket")
 	key := c.Param("key")
 
 	log.Printf("fetch bucket: %s, object: %s\n", bucket, key)
+
+	if bucket == "" || key == "" {
+		_ = c.AbortWithError(400, errors.New("bucket name or key is empty"))
+		return
+	}
 
 	bs, err := ws.s3Cli.FetchStream(context.Background(), bucket, key)
 	if err != nil {
@@ -159,17 +193,20 @@ func (sc *S3Client) FetchStream(ctx context.Context, bucket, objectName string) 
 		return nil, fmt.Errorf("get object stat failed: %w", err)
 	}
 
-	print("object size:", objStat.Size)
 	if objStat.Size == 0 {
 		return nil, fmt.Errorf("object size is 0")
 	}
 
 	buff := bytes.NewBuffer(make([]byte, 0, objStat.Size))
 	for {
-		bs := make([]byte, 4096)
+		bs := make([]byte, 8192)
 		n, err := obj.Read(bs)
-		if err != nil || n == 0 {
-			break
+		if err != nil {
+			if errors.Is(err, io.EOF) {
+				break
+			} else {
+				return nil, fmt.Errorf("read object failed: %w", err)
+			}
 		}
 		buff.Write(bs[:n])
 	}
