@@ -1,0 +1,9 @@
+
+
+### Get Image
+
+# curl localhost:10086/api/imgsch/002472101a42a81c4ef6b273fd99b0a6.jpg
+GET localhost:10086/api/imgsch/002472101a42a81c4ef6b273fd99b0a6.jpg
+
+###
+

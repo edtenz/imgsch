@@ -128,3 +128,10 @@ def thumbnail(image_path: str, max_size: int, output_dir: str, quality=70) -> st
 
     image.save(output_path, optimize=True, quality=quality)
     return output_path
+
+
+def thumbnail_ops(output_dir: str, max_size: int = 450, quality=60) -> callable:
+    def wrapper(image_path: str) -> str:
+        return thumbnail(image_path, max_size, output_dir, quality)
+
+    return wrapper
