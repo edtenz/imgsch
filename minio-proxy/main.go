@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"context"
 	"errors"
+	"flag"
 	"fmt"
 	"github.com/gin-gonic/gin"
 	"github.com/minio/minio-go"
@@ -11,12 +12,27 @@ import (
 	"log"
 )
 
+var flags struct {
+	Endpoint     string
+	AccessKey    string
+	AccessSecret string
+	UseSSL       bool
+}
+
+func init() {
+	flag.StringVar(&flags.Endpoint, "endpoint", "localhost:9090", "s3 endpoint")
+	flag.StringVar(&flags.AccessKey, "key", "minioadmin", "s3 access key")
+	flag.StringVar(&flags.AccessSecret, "secret", "minioadmin", "s3 secret key")
+	flag.BoolVar(&flags.UseSSL, "ssl", false, "use ssl")
+	flag.Parse()
+}
+
 func main() {
 	s3Cli := NewS3Client(&S3Config{
-		Endpoint:     "localhost:9090",
-		AccessKey:    "minioadmin",
-		AccessSecret: "minioadmin",
-		UseSSL:       false,
+		Endpoint:     flags.Endpoint,
+		AccessKey:    flags.AccessKey,
+		AccessSecret: flags.AccessSecret,
+		UseSSL:       flags.UseSSL,
 	})
 
 	err := s3Cli.Init()
@@ -123,6 +139,7 @@ func NewS3Client(s3conf *S3Config) *S3Client {
 }
 
 func (sc *S3Client) Init() (err error) {
+	log.Printf("[S3Client] init s3 client: %+v", sc.s3conf)
 	sc.minioClient, err = minio.New(sc.s3conf.Endpoint, sc.s3conf.AccessKey,
 		sc.s3conf.AccessSecret, sc.s3conf.UseSSL)
 
