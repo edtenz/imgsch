@@ -17,6 +17,7 @@ var flags struct {
 	AccessKey    string
 	AccessSecret string
 	UseSSL       bool
+	Port         int
 }
 
 func init() {
@@ -24,7 +25,9 @@ func init() {
 	flag.StringVar(&flags.AccessKey, "key", "minioadmin", "s3 access key")
 	flag.StringVar(&flags.AccessSecret, "secret", "minioadmin", "s3 secret key")
 	flag.BoolVar(&flags.UseSSL, "ssl", false, "use ssl")
+	flag.IntVar(&flags.Port, "port", 10086, "http server port")
 	flag.Parse()
+	log.Printf("flags: %+v\n", flags)
 }
 
 // minio-proxy -endpoint localhost:9090 -key minioadmin -secret minioadmin -ssl false
@@ -41,7 +44,7 @@ func main() {
 		log.Fatal(err)
 	}
 
-	ws := NewWebServer(10086, s3Cli)
+	ws := NewWebServer(flags.Port, s3Cli)
 	ws.Start()
 }
 
