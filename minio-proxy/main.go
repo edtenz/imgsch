@@ -10,6 +10,7 @@ import (
 	"github.com/minio/minio-go"
 	"io"
 	"log"
+	"os"
 )
 
 var flags struct {
@@ -26,6 +27,13 @@ func init() {
 	flag.StringVar(&flags.AccessSecret, "secret", "minioadmin", "s3 secret key")
 	flag.BoolVar(&flags.UseSSL, "ssl", false, "use ssl")
 	flag.IntVar(&flags.Port, "port", 10086, "http server port")
+
+	flag.Usage = func() {
+		fmt.Fprintf(os.Stderr, "Usage: %s [options]\n", os.Args[0])
+		fmt.Fprintf(os.Stderr, "Options:\n")
+		flag.PrintDefaults()
+	}
+
 	flag.Parse()
 	log.Printf("flags: %+v\n", flags)
 }
