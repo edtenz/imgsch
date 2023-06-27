@@ -20,7 +20,8 @@ var flags struct {
 	Port         int
 }
 
-func init() {
+// minio-proxy -endpoint localhost:9090 -key minioadmin -secret minioadmin -port 10086
+func main() {
 	flag.StringVar(&flags.Endpoint, "endpoint", "localhost:9090", "s3 endpoint")
 	flag.StringVar(&flags.AccessKey, "key", "minioadmin", "s3 access key")
 	flag.StringVar(&flags.AccessSecret, "secret", "minioadmin", "s3 secret key")
@@ -34,10 +35,7 @@ func init() {
 
 	flag.Parse()
 	log.Printf("flags: %+v\n", flags)
-}
 
-// minio-proxy -endpoint localhost:9090 -key minioadmin -secret minioadmin -port 10086
-func main() {
 	s3Cli := NewS3Client(&S3Config{
 		Endpoint:     flags.Endpoint,
 		AccessKey:    flags.AccessKey,
@@ -220,6 +218,8 @@ func (sc *S3Client) FetchStream(ctx context.Context, bucket, objectName string) 
 		return nil, fmt.Errorf("get object stat failed: %w", err)
 	}
 
+	println("object size:", objStat.Size)
+
 	if objStat.Size == 0 {
 		return nil, fmt.Errorf("object size is 0")
 	}
@@ -230,6 +230,7 @@ func (sc *S3Client) FetchStream(ctx context.Context, bucket, objectName string) 
 		n, err := obj.Read(bs)
 		if err != nil {
 			if errors.Is(err, io.EOF) {
+				buff.Write(bs[:n])
 				break
 			} else {
 				return nil, fmt.Errorf("read object failed: %w", err)
