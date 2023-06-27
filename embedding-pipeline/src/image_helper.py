@@ -1,7 +1,12 @@
 import hashlib
 import os
 
+import cv2
+import numpy as np
+import requests
 from PIL import Image
+
+from logger import LOGGER
 
 
 def gen_file_key(file_path: str) -> str:
@@ -135,3 +140,41 @@ def thumbnail_ops(output_dir: str, max_size: int = 450, quality=60) -> callable:
         return thumbnail(image_path, max_size, output_dir, quality)
 
     return wrapper
+
+
+def load_from_bytes(bs: bytes) -> np.ndarray:
+    try:
+        arr = np.asarray(bytearray(bs), dtype=np.uint8)
+        return cv2.imdecode(arr, -1)
+    except Exception as e:
+        LOGGER.error('Load image from bytes failed, error msg: %s' % str(e))
+
+
+def load_from_local(image_path: str) -> np.ndarray:
+    return cv2.imread(image_path)
+
+
+def load_from_remote(image_url: str) -> np.ndarray:
+    try:
+        r = requests.get(image_url, timeout=(20, 20))
+        if r.status_code // 100 != 2:
+            LOGGER.error('Download image from %s failed, error msg: %s, request code: %s ' % (image_url,
+                                                                                              r.text,
+                                                                                              r.status_code))
+            return None
+        return load_from_bytes(r.content)
+    except Exception as e:
+        LOGGER.error('Download image from %s failed, error msg: %s' % (image_url, str(e)))
+        return False
+
+
+def load_image_ops(image_path: str):
+    bgr_cv_image = load_from_local(image_path)
+
+    if bgr_cv_image is None:
+        err = 'Read image %s failed' % image_path
+        LOGGER.error('Read image %s failed' % image_path)
+        raise RuntimeError(err)
+
+    rgb_cv_image = cv2.cvtColor(bgr_cv_image, cv2.COLOR_BGR2RGB)
+    return Image(rgb_cv_image, 'RGB')
