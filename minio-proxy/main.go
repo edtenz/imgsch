@@ -11,6 +11,7 @@ import (
 	"io"
 	"log"
 	"os"
+	"strings"
 )
 
 var flags struct {
@@ -25,7 +26,7 @@ func main() {
 	flag.StringVar(&flags.Endpoint, "endpoint", "localhost:9090", "s3 endpoint")
 	flag.StringVar(&flags.AccessKey, "key", "minioadmin", "s3 access key")
 	flag.StringVar(&flags.AccessSecret, "secret", "minioadmin", "s3 secret key")
-	flag.IntVar(&flags.Port, "port", 10086, "http server port")
+	flag.IntVar(&flags.Port, "port", 10085, "http server port")
 
 	flag.Usage = func() {
 		fmt.Fprintf(os.Stderr, "Usage: %s [options]\n", os.Args[0])
@@ -124,8 +125,19 @@ func (ws *WebServer) handleGetObject(c *gin.Context) {
 	}
 	log.Println("fetch object success, file size:", len(bs))
 
-	c.Header("Content-Disposition", "attachment; filename="+key)
-	c.Data(200, "application/octet-stream", bs)
+	if strings.HasSuffix(strings.ToLower(key), ".jpg") {
+		c.Header("Content-Type", "image/jpeg")
+		c.Status(200)
+		_, _ = c.Writer.Write(bs)
+	} else if strings.HasSuffix(strings.ToLower(key), ".png") {
+		c.Header("Content-Type", "image/png")
+		c.Status(200)
+		_, _ = c.Writer.Write(bs)
+	} else {
+		c.Header("Content-Disposition", "attachment; filename="+key)
+		c.Data(200, "application/octet-stream", bs)
+	}
+
 }
 
 type S3Config struct {
