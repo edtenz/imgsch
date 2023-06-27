@@ -125,7 +125,8 @@ func (ws *WebServer) handleGetObject(c *gin.Context) {
 	}
 	log.Println("fetch object success, file size:", len(bs))
 
-	if strings.HasSuffix(strings.ToLower(key), ".jpg") {
+	if strings.HasSuffix(strings.ToLower(key), ".jpg") ||
+		strings.HasSuffix(strings.ToLower(key), ".jpeg") {
 		c.Header("Content-Type", "image/jpeg")
 		c.Status(200)
 		_, _ = c.Writer.Write(bs)
