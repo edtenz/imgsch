@@ -1,4 +1,4 @@
-from load import do_load
+from load import do_embedding
 from milvus_helpers import MILVUS_CLIENT
 from minio_helpers import MINIO_CLIENT
 from model import VitBase224
@@ -13,5 +13,5 @@ def test_process():
     test_bucket_name = 'mybucket'
     dim = 768
     vit_model = VitBase224()
-    count = do_load(img_dir, vit_model, MILVUS_CLIENT, MYSQL_CLIENT, MINIO_CLIENT, test_bucket_name, table_name, dim)
+    count = do_embedding(img_dir, vit_model, MILVUS_CLIENT, MYSQL_CLIENT, MINIO_CLIENT, test_bucket_name, table_name, dim)
     print(count)

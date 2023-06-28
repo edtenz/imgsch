@@ -5,6 +5,8 @@ import cv2
 import numpy as np
 import requests
 from PIL import Image
+# from towhee._types import Image as TowheeImage
+from towhee import ops
 
 from logger import LOGGER
 
@@ -158,9 +160,8 @@ def load_from_remote(image_url: str) -> np.ndarray:
     try:
         r = requests.get(image_url, timeout=(20, 20))
         if r.status_code // 100 != 2:
-            LOGGER.error('Download image from %s failed, error msg: %s, request code: %s ' % (image_url,
-                                                                                              r.text,
-                                                                                              r.status_code))
+            LOGGER.error('Download image from %s failed, error msg: %s, request code: %s '
+                         % (image_url, r.text, r.status_code))
             return None
         return load_from_bytes(r.content)
     except Exception as e:
@@ -169,12 +170,24 @@ def load_from_remote(image_url: str) -> np.ndarray:
 
 
 def load_image_ops(image_path: str):
-    bgr_cv_image = load_from_local(image_path)
+    # bgr_cv_image = load_from_local(image_path)
+    #
+    # if bgr_cv_image is None:
+    #     err = 'Read image %s failed' % image_path
+    #     LOGGER.error('Read image %s failed' % image_path)
+    #     raise RuntimeError(err)
+    #
+    # rgb_cv_image = cv2.cvtColor(bgr_cv_image, cv2.COLOR_BGR2RGB)
+    # return TowheeImage(rgb_cv_image, 'RGB')
+    return ops.image_decode.cv2_rgb()(image_path)
 
-    if bgr_cv_image is None:
-        err = 'Read image %s failed' % image_path
-        LOGGER.error('Read image %s failed' % image_path)
-        raise RuntimeError(err)
 
-    rgb_cv_image = cv2.cvtColor(bgr_cv_image, cv2.COLOR_BGR2RGB)
-    return Image(rgb_cv_image, 'RGB')
+def get_image_dimensions(file_path) -> tuple[int, int]:
+    """
+    Get image dimensions
+    :param file_path:  image file path
+    :return:  image dimensions, width and height
+    """
+    with Image.open(file_path) as image:
+        width, height = image.size
+        return width, height

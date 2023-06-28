@@ -1,41 +1,49 @@
-import image_helper
-from config import DEFAULT_TABLE, VECTOR_DIMENSION, MINIO_BUCKET_NAME
+import json
+
+import requests
+
+from config import DEFAULT_TABLE, VECTOR_DIMENSION, MINIO_PROXY_ENDPOINT
 from logger import LOGGER
 from milvus_helpers import MilvusClient, insert_milvus_ops
-from minio_helpers import MinioClient, upload_minio_ops
 from model import Model
 from mysql_helpers import MysqlClient, insert_mysql_ops
 
 
-def do_load(
-        image_dir: str,
+def do_embedding(
+        bucket_name: str,
         model: Model,
         milvus_client: MilvusClient,
         mysql_cli: MysqlClient,
-        minio_cli: MinioClient,
         table_name: str = DEFAULT_TABLE,
         dim: int = VECTOR_DIMENSION) -> int:
-    bucket_name = MINIO_BUCKET_NAME
-    minio_cli.create_bucket(bucket_name)
-    LOGGER.info(f"Bucket information: {bucket_name}")
-
     collection = milvus_client.create_collection(table_name, dim)
     LOGGER.info(f"Collection information: {table_name}")
 
     mysql_cli.create_table(table_name)
     LOGGER.info(f"Table information: {table_name}")
 
-    img_list = image_helper.get_images(image_dir)
-    total = len(img_list)
+    lst_url = f'http://{MINIO_PROXY_ENDPOINT}/api/{bucket_name}'
+    LOGGER.info(f"List url: {lst_url}")
+    response = requests.get(lst_url)
+    LOGGER.debug(f"Response: {response}")
+    response.raise_for_status()  # Raise an exception if the request was unsuccessful
+
+    object_names = json.loads(response.content)
+    total = len(object_names)
     LOGGER.info(f"Start to process {total} files")
     success_count = 0
-    for i, img_path in enumerate(img_list):
-        LOGGER.info(f"Process file {img_path}, {i + 1}/{total}")
-        ok = load_pipeline(img_path, model, milvus_client, mysql_cli, minio_cli, bucket_name, table_name)
-        if ok:
-            success_count += 1
+    for i, object_name in enumerate(object_names):
+        LOGGER.info(f"Process file {object_name}, {i + 1}/{total}")
+        img_url = f'http://{MINIO_PROXY_ENDPOINT}/api/{bucket_name}/{object_name}'
+        try:
+            ok = embedding_pipeline(img_url, model, milvus_client, mysql_cli, table_name)
+            if ok:
+                success_count += 1
 
-        LOGGER.info(f"Process file {img_path} successfully, succ count: {success_count}/{total}")
+            LOGGER.info(f"Process file {object_name} successfully, succ count: {success_count}/{total}")
+        except Exception as e:
+            LOGGER.error(f"Process file {object_name} failed: {e}")
+            continue
 
     LOGGER.info(f"Process {success_count} files successfully, total: {total}")
     LOGGER.info(f"Load {collection.num_entities} entities rows")
@@ -43,30 +51,26 @@ def do_load(
     return success_count
 
 
-def load_pipeline(img_path: str,
-                  model: Model,
-                  milvus_client: MilvusClient,
-                  mysql_cli: MysqlClient,
-                  minio_cli: MinioClient,
-                  bucket_name: str = MINIO_BUCKET_NAME,
-                  table_name: str = DEFAULT_TABLE) -> bool:
+def embedding_pipeline(img_url: str,
+                       model: Model,
+                       milvus_client: MilvusClient,
+                       mysql_cli: MysqlClient,
+                       table_name: str = DEFAULT_TABLE) -> bool:
     p_insert = (
         model.pipeline()
-        # .map(('key', 'url'), 'upload_res', lambda key, url: (key, url))
-        .map(('key', 'url'), 'upload_res', upload_minio_ops(minio_cli, bucket_name))
         .map('vec', 'id', insert_milvus_ops(milvus_client, table_name))
-        # .map(('key', 'sbox', 'score'), 'db_res', lambda key, sbox, score: (key, sbox, score))
-        .map(('id', 'key', 'sbox', 'score', 'label'), 'db_res', insert_mysql_ops(mysql_cli, table_name))
-        .output('url', 'key', 'sbox', 'label', 'score', 'id', 'upload_res', 'db_res')
+        .map(('id', 'url', 'sbox', 'score', 'label'), 'db_res', insert_mysql_ops(mysql_cli, table_name))
+        .output('url', 'sbox', 'label', 'score', 'id', 'db_res')
     )
-    res = p_insert(img_path)
+    LOGGER.debug(f"Process file from url: {img_url}")
+    res = p_insert(img_url)
     size = res.size
     print(f'Insert {size} vectors')
     for i in range(size):
         it = res.get()
         print(
-            f'{i}, url: {it[0]}, key: {it[1]}, sbox: {it[2]}, label: {it[3]}, score: {it[4]}, '
-            f'id: {it[5]}, upload_res: {it[6]}, db_res: {it[7]}')
+            f'{i}, url: {it[0]}, sbox: {it[1]}, label: {it[2]}, score: {it[3]}, '
+            f'id: {it[4]}, db_res: {it[5]}')
 
-    LOGGER.debug(f"Process file {img_path} successfully")
+    LOGGER.debug(f"Process file {img_url} successfully")
     return True

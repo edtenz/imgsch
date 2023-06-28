@@ -8,7 +8,7 @@ from starlette.responses import FileResponse
 
 from config import HTTP_PORT, MINIO_DOWNLOAD_PATH
 from image_helper import thumbnail
-from load import do_load
+from load import do_embedding
 from logger import LOGGER
 from milvus_helpers import MILVUS_CLIENT
 from minio_helpers import MINIO_CLIENT, download_object
@@ -38,10 +38,10 @@ def ping():
 
 
 @app.get('/load')
-def load_img(img_dir: str, table_name: str):
+def load_img(img_bucket: str, table_name: str):
     try:
-        LOGGER.debug(f"detect image: {img_dir}, table_name: {table_name}")
-        count = do_load(img_dir, MODEL, MILVUS_CLIENT, MYSQL_CLIENT, MINIO_CLIENT, table_name)
+        LOGGER.debug(f"detect image bucket: {img_bucket}, table_name: {table_name}")
+        count = do_embedding(img_bucket, MODEL, MILVUS_CLIENT, MYSQL_CLIENT, table_name)
         return JSONResponse({'status': True, 'msg': 'success', 'data': count})
     except Exception as e:
         LOGGER.error(f"Get image error: {e}")

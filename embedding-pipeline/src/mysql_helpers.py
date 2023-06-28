@@ -28,7 +28,7 @@ class MysqlClient(object):
         sql = """
         CREATE TABLE IF NOT EXISTS {}(
           id BIGINT NOT NULL AUTO_INCREMENT PRIMARY KEY,
-          image_key VARCHAR(50) NOT NULL,
+          image_key VARCHAR(128) NOT NULL,
           box VARCHAR(30),
           score FLOAT,
           label VARCHAR(50),

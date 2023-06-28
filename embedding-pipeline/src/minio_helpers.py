@@ -36,6 +36,15 @@ class MinioClient(object):
         LOGGER.info(f'Bucket {bucket_name} created successfully')
         return True
 
+    def list_objects(self, bucket_name: str = MINIO_BUCKET_NAME) -> list[str]:
+        """
+        List all objects in Minio bucket
+        :param bucket_name: bucket name
+        :return: list of objects in Minio bucket
+        """
+        objects = self.minio_client.list_objects(bucket_name, recursive=False)
+        return [obj.object_name for obj in objects]
+
     def upload(self, object_name: str, file_path: str, bucket_name: str = MINIO_BUCKET_NAME) -> bool:
         """
         Upload object to Minio bucket

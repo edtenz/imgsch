@@ -12,6 +12,7 @@ MINIO_ACCESS_KEY = os.getenv("MINIO_ACCESS_KEY", "minioadmin")
 MINIO_SECRET_KEY = os.getenv("MINIO_SECRET_KEY", "minioadmin")
 MINIO_DOWNLOAD_PATH = os.getenv("MINIO_DOWNLOAD_PATH", "tmp/download-images")
 MINIO_BUCKET_NAME = os.getenv("MINIO_BUCKET_NAME", "imgsch")
+MINIO_PROXY_ENDPOINT = os.getenv("MINIO_PROXY_ENDPOINT", "localhost:10086")
 
 ############### Milvus Configuration ###############
 MILVUS_HOST = os.getenv("MILVUS_HOST", "127.0.0.1")

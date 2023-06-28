@@ -1,3 +1,48 @@
+GET http://localhost:8090/load?img_bucket=imgsch&table_name=milvus_imgsch_tab
+Connection: Keep-Alive
+User-Agent: Apache-HttpClient/4.5.14 (Java/17.0.6)
+Accept-Encoding: br,deflate,gzip,x-gzip
+
+<> 2023-06-28T083613.200.json
+
+###
+
+GET http://localhost:8090/load?img_bucket=imgsch&table_name=milvus_imgsch_tab
+Connection: Keep-Alive
+User-Agent: Apache-HttpClient/4.5.14 (Java/17.0.6)
+Accept-Encoding: br,deflate,gzip,x-gzip
+
+<> 2023-06-28T083416.200.json
+
+###
+
+GET http://localhost:8090/load?img_bucket=imgsch&table_name=milvus_imgsch_tab
+Connection: Keep-Alive
+User-Agent: Apache-HttpClient/4.5.14 (Java/17.0.6)
+Accept-Encoding: br,deflate,gzip,x-gzip
+
+<> 2023-06-28T083119.200.json
+
+###
+
+GET http://localhost:8090/load?img_bucket=imgsch&table_name=milvus_imgsch_tab
+Connection: Keep-Alive
+User-Agent: Apache-HttpClient/4.5.14 (Java/17.0.6)
+Accept-Encoding: br,deflate,gzip,x-gzip
+
+<> 2023-06-28T080959.200.json
+
+###
+
+GET http://localhost:8090/load?img_bucket=imgsch&table_name=milvus_imgsch_tab
+Connection: Keep-Alive
+User-Agent: Apache-HttpClient/4.5.14 (Java/17.0.6)
+Accept-Encoding: br,deflate,gzip,x-gzip
+
+<> 2023-06-28T080312.200.json
+
+###
+
 GET http://localhost:8090/img/44cffb7fe6339ad06e4f046ae52fa987.jpg
 Connection: Keep-Alive
 User-Agent: Apache-HttpClient/4.5.14 (Java/17.0.6)
