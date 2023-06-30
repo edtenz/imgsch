@@ -10,6 +10,7 @@ import (
 	"github.com/minio/minio-go"
 	"io"
 	"log"
+	"net/http"
 	"os"
 	"strings"
 )
@@ -68,9 +69,9 @@ func NewWebServer(port int, s3Cli *S3Client) *WebServer {
 }
 
 func (ws *WebServer) Start() {
-	ws.router.GET("/api", ws.handleLisBuckets)
-	ws.router.GET("/api/:bucket", ws.handleListFiles)
-	ws.router.GET("/api/:bucket/:key", ws.handleGetObject)
+	ws.router.GET("/file", ws.handleLisBuckets)
+	ws.router.GET("/file/:bucket", ws.handleListFiles)
+	ws.router.GET("/file/:bucket/:key", ws.handleGetObject)
 
 	// Start the HTTP server
 	endpoint := fmt.Sprintf(":%d", ws.port)
@@ -124,6 +125,10 @@ func (ws *WebServer) handleGetObject(c *gin.Context) {
 		return
 	}
 	log.Println("fetch object success, file size:", len(bs))
+
+	// get magic number from bytes
+	magic := http.DetectContentType(bs)
+	log.Println("magic:", magic)
 
 	if strings.HasSuffix(strings.ToLower(key), ".jpg") ||
 		strings.HasSuffix(strings.ToLower(key), ".jpeg") {
@@ -253,4 +258,29 @@ func (sc *S3Client) FetchStream(ctx context.Context, bucket, objectName string) 
 	}
 
 	return buff.Bytes(), nil
+}
+
+// UploadFile uploads a file to s3
+func (sc *S3Client) UploadFile(ctx context.Context, bucket, objectName, localFile string) error {
+	_, err := sc.minioClient.FPutObjectWithContext(ctx, bucket, objectName, localFile, minio.PutObjectOptions{})
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
+// UploadFileFromStream uploads a file from stream to s3
+func (sc *S3Client) UploadFileFromStream(ctx context.Context, bucket, objectName string, reader io.Reader, size int64) error {
+	_, err := sc.minioClient.PutObjectWithContext(ctx, bucket, objectName, reader, size, minio.PutObjectOptions{})
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
+// UploadFileFromBytes uploads a file from bytes to s3
+func (sc *S3Client) UploadFileFromBytes(ctx context.Context, bucket, objectName string, bs []byte) error {
+	reader := bytes.NewReader(bs)
+	return sc.UploadFileFromStream(ctx, bucket, objectName, reader, int64(len(bs)))
 }
