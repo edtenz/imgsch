@@ -149,12 +149,6 @@ type UserLoginRequest struct {
 	Password string `json:"password"`
 }
 
-type Response struct {
-	Ok   bool   `json:"ok"`
-	Msg  string `json:"msg"`
-	Data any    `json:"data"`
-}
-
 func (ws *WebServer) handleLogin(c *gin.Context) {
 	var req UserLoginRequest
 	err := c.BindJSON(&req)
