@@ -1,13 +1,26 @@
 ### List buckets
-GET localhost:10086/api/
+GET localhost:10086/file/
 
 
 ### List objects
-GET localhost:10086/api/test
+GET localhost:10086/file/test
 
 
 
 ### Get Image
-GET localhost:10086/api/imgsch/002472101a42a81c4ef6b273fd99b0a6.jpg
+GET localhost:10086/file/test/d7d224d86592352e2b0814ceb45d6570.jpg
 
+
+### Put Image
+# curl -X POST -F "file=@../data/test.jpg" localhost:10086/file/test/002de79efc060d258b033f2509a9b5cb.jpg
+POST localhost:10086/file/test/002de79efc060d258b033f2509a9b5cb.jpg
+Content-Type: multipart/form-data; boundary=WebAppBoundary
+
+--WebAppBoundary
+Content-Disposition: form-data; name="file"; filename="test.jpg"
+
+< ../data/test.jpg
+--WebAppBoundary--
+
+###
 

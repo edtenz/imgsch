@@ -12,7 +12,6 @@ import (
 	"log"
 	"net/http"
 	"os"
-	"strings"
 )
 
 var flags struct {
@@ -73,6 +72,8 @@ func (ws *WebServer) Start() {
 	ws.router.GET("/file/:bucket", ws.handleListFiles)
 	ws.router.GET("/file/:bucket/:key", ws.handleGetObject)
 
+	ws.router.POST("/file/:bucket/:key", ws.handlePutObject)
+
 	// Start the HTTP server
 	endpoint := fmt.Sprintf(":%d", ws.port)
 	log.Println("start http server on ", endpoint)
@@ -114,35 +115,79 @@ func (ws *WebServer) handleGetObject(c *gin.Context) {
 	log.Printf("fetch bucket: %s, object: %s\n", bucket, key)
 
 	if bucket == "" || key == "" {
-		_ = c.AbortWithError(400, errors.New("bucket name or key is empty"))
+		_ = c.AbortWithError(http.StatusBadRequest, errors.New("bucket name or key is empty"))
 		return
 	}
 
-	bs, err := ws.s3Cli.FetchStream(context.Background(), bucket, key)
+	bs, err := ws.s3Cli.FetchStream(c.Request.Context(), bucket, key)
 	if err != nil {
+		if errors.Is(err, ErrNotFound) {
+			log.Printf("fetch object failed, object not found: %+v", err)
+			_ = c.AbortWithError(http.StatusNotFound, err)
+			return
+		}
 		log.Printf("fetch object failed: %+v", err)
-		_ = c.AbortWithError(500, err)
+		_ = c.AbortWithError(http.StatusInternalServerError, err)
 		return
 	}
-	log.Println("fetch object success, file size:", len(bs))
+
+	if len(bs) == 0 {
+		log.Printf("fetch object failed, object is empty")
+		_ = c.AbortWithError(http.StatusNotFound, errors.New("object is empty"))
+		return
+	}
 
 	// get magic number from bytes
-	magic := http.DetectContentType(bs)
-	log.Println("magic:", magic)
+	contentType := http.DetectContentType(bs)
+	log.Printf("fetch object success, file size: %d\n, content-type: %s", len(bs), contentType)
 
-	if strings.HasSuffix(strings.ToLower(key), ".jpg") ||
-		strings.HasSuffix(strings.ToLower(key), ".jpeg") {
-		c.Header("Content-Type", "image/jpeg")
-		c.Status(200)
-		_, _ = c.Writer.Write(bs)
-	} else if strings.HasSuffix(strings.ToLower(key), ".png") {
-		c.Header("Content-Type", "image/png")
-		c.Status(200)
-		_, _ = c.Writer.Write(bs)
-	} else {
-		c.Header("Content-Disposition", "attachment; filename="+key)
-		c.Data(200, "application/octet-stream", bs)
+	// set content type
+	c.Header("Content-Type", contentType)
+	c.Status(http.StatusOK)
+	_, _ = c.Writer.Write(bs)
+}
+
+func (ws *WebServer) handlePutObject(c *gin.Context) {
+	bucket := c.Param("bucket")
+	key := c.Param("key")
+
+	log.Printf("put into bucket: %s, object: %s\n", bucket, key)
+
+	if bucket == "" || key == "" {
+		_ = c.AbortWithError(http.StatusBadRequest, errors.New("bucket name or key is empty"))
+		return
 	}
+
+	// Single file
+	file, err := c.FormFile("file")
+	if err != nil {
+		_ = c.AbortWithError(http.StatusBadRequest, fmt.Errorf("get form file err: %s", err.Error()))
+		return
+	}
+
+	openedFile, err := file.Open()
+	if err != nil {
+		_ = c.AbortWithError(http.StatusBadRequest, fmt.Errorf("open file err: %s", err.Error()))
+		return
+	}
+	defer openedFile.Close()
+
+	// Read the file into a byte array
+	bs, err := io.ReadAll(openedFile)
+	if err != nil {
+		_ = c.AbortWithError(http.StatusBadRequest, fmt.Errorf("read file err: %s", err.Error()))
+		return
+	}
+
+	err = ws.s3Cli.UploadFileFromBytes(c.Request.Context(), bucket, key, bs)
+	if err != nil {
+		_ = c.AbortWithError(http.StatusInternalServerError, fmt.Errorf("upload file err: %s", err.Error()))
+		return
+	}
+
+	c.JSON(http.StatusOK, gin.H{
+		"message": fmt.Sprintf("'%s' uploaded!", file.Filename),
+	})
 
 }
 
@@ -152,6 +197,10 @@ type S3Config struct {
 	AccessSecret string `yaml:"access_secret"`
 	UseSSL       bool   `yaml:"use_ssl"`
 }
+
+var (
+	ErrNotFound = errors.New("not found")
+)
 
 type S3Client struct {
 	s3conf      *S3Config
@@ -217,8 +266,16 @@ func (sc *S3Client) ListFiles(bucket, objectPrefix string) (lst []string) {
 }
 
 func (sc *S3Client) Fetch(ctx context.Context, bucket, objectName, localFile string) error {
-	if err := sc.minioClient.FGetObjectWithContext(ctx, bucket, objectName, localFile, minio.GetObjectOptions{}); err != nil {
-		return err
+	err := sc.minioClient.FGetObjectWithContext(ctx, bucket, objectName, localFile, minio.GetObjectOptions{})
+	if err != nil {
+		var respErr minio.ErrorResponse
+		if errors.As(err, &respErr) {
+			switch respErr.StatusCode {
+			case http.StatusNotFound:
+				return errors.Join(ErrNotFound, fmt.Errorf("object not found: %w", err))
+			}
+		}
+		return fmt.Errorf("get object failed: %w", err)
 	}
 
 	return nil
@@ -233,10 +290,16 @@ func (sc *S3Client) FetchStream(ctx context.Context, bucket, objectName string) 
 
 	objStat, err := obj.Stat()
 	if err != nil {
+		var respErr minio.ErrorResponse
+		if errors.As(err, &respErr) {
+			switch respErr.StatusCode {
+			case http.StatusNotFound:
+				return nil, errors.Join(ErrNotFound, fmt.Errorf("object not found: %w", err))
+			}
+		}
+
 		return nil, fmt.Errorf("get object stat failed: %w", err)
 	}
-
-	println("object size:", objStat.Size)
 
 	if objStat.Size == 0 {
 		return nil, fmt.Errorf("object size is 0")

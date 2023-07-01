@@ -57,7 +57,7 @@ func TestS3Client_FetchStream(t *testing.T) {
 			return
 		}
 
-		bs, err := s3Cli.FetchStream(context.Background(), "imgsch", "54e88fa8664fc040cd52dad6e6c8bd77.jpg")
+		bs, err := s3Cli.FetchStream(context.Background(), "imgsch", "002de79efc060d258b033f2509a9b5cb.jpga")
 		if err != nil {
 			t.Errorf("fetch stream error, %+v", err)
 			return
