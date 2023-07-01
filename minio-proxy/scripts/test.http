@@ -1,19 +1,33 @@
+### Login
+POST localhost:10086/login
+Content-Type: application/json
+
+{
+  "username": "admin",
+  "password": "admin"
+}
+
+
 ### List buckets
 GET localhost:10086/file/
+Authorization: 8daad628b6cc958c03461d43af933f0558f36cae
 
 
 ### List objects
 GET localhost:10086/file/test
+Authorization: 8daad628b6cc958c03461d43af933f0558f36cae
 
 
 
 ### Get Image
 GET localhost:10086/file/test/d7d224d86592352e2b0814ceb45d6570.jpg
+Authorization: 8daad628b6cc958c03461d43af933f0558f36cae
 
 
 ### Put Image
 # curl -X POST -F "file=@../data/test.jpg" localhost:10086/file/test/002de79efc060d258b033f2509a9b5cb.jpg
 POST localhost:10086/file/test/002de79efc060d258b033f2509a9b5cb.jpg
+Authorization: 8daad628b6cc958c03461d43af933f0558f36cae
 Content-Type: multipart/form-data; boundary=WebAppBoundary
 
 --WebAppBoundary

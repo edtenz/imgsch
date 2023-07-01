@@ -3,6 +3,7 @@ package main
 import (
 	"context"
 	"testing"
+	"time"
 )
 
 func TestS3Client_ListBuckets(t *testing.T) {
@@ -64,5 +65,25 @@ func TestS3Client_FetchStream(t *testing.T) {
 		}
 
 		t.Logf("fetch stream success, file size: %d", len(bs))
+	})
+}
+
+func TestLRU_Set(t *testing.T) {
+	t.Run("test lru set", func(t *testing.T) {
+		cache := NewLRU(2, 60) // Capacity of 2, items live for 60 seconds
+		cache.Set("hello", "world")
+		value, ok := cache.Get("hello")
+		if ok {
+			t.Logf("get value: %s", value)
+		}
+	})
+
+	t.Run("test lru set expire", func(t *testing.T) {
+		cache := NewLRU(2, 1) // Capacity of 2, items live for 60 seconds
+		cache.Set("hello", "world")
+		time.Sleep(2 * time.Second)
+		value, ok := cache.Get("hello")
+		t.Logf("get value: %s, ok: %t", value, ok)
+
 	})
 }

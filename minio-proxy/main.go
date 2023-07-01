@@ -2,16 +2,22 @@ package main
 
 import (
 	"bytes"
+	"container/list"
 	"context"
+	"crypto/sha1"
 	"errors"
 	"flag"
 	"fmt"
 	"github.com/gin-gonic/gin"
+	"github.com/google/uuid"
 	"github.com/minio/minio-go"
 	"io"
 	"log"
 	"net/http"
 	"os"
+	"strconv"
+	"sync"
+	"time"
 )
 
 var flags struct {
@@ -19,14 +25,18 @@ var flags struct {
 	AccessKey    string
 	AccessSecret string
 	Port         int
+	Username     string
+	Password     string
 }
 
-// minio-proxy -endpoint localhost:9090 -key minioadmin -secret minioadmin -port 10086
+// minio-proxy -endpoint localhost:9090 -key minioadmin -secret minioadmin -port 10086 -username admin -password admin
 func main() {
 	flag.StringVar(&flags.Endpoint, "endpoint", "localhost:9090", "s3 endpoint")
 	flag.StringVar(&flags.AccessKey, "key", "minioadmin", "s3 access key")
 	flag.StringVar(&flags.AccessSecret, "secret", "minioadmin", "s3 secret key")
 	flag.IntVar(&flags.Port, "port", 10085, "http server port")
+	flag.StringVar(&flags.Username, "username", "admin", "http server username")
+	flag.StringVar(&flags.Password, "password", "admin", "http server password")
 
 	flag.Usage = func() {
 		fmt.Fprintf(os.Stderr, "Usage: %s [options]\n", os.Args[0])
@@ -53,10 +63,15 @@ func main() {
 	ws.Start()
 }
 
+const (
+	AuthorizationH = "Authorization"
+)
+
 type WebServer struct {
 	port   int
 	router *gin.Engine
 	s3Cli  *S3Client
+	cache  *LRU
 }
 
 func NewWebServer(port int, s3Cli *S3Client) *WebServer {
@@ -64,10 +79,14 @@ func NewWebServer(port int, s3Cli *S3Client) *WebServer {
 		port:   port,
 		router: gin.New(),
 		s3Cli:  s3Cli,
+		cache:  NewLRU(10, int64(15*time.Minute.Seconds())),
 	}
 }
 
 func (ws *WebServer) Start() {
+	ws.router.Use(ws.applyAuth())
+
+	ws.router.POST("/login", ws.handleLogin)
 	ws.router.GET("/file", ws.handleLisBuckets)
 	ws.router.GET("/file/:bucket", ws.handleListFiles)
 	ws.router.GET("/file/:bucket/:key", ws.handleGetObject)
@@ -81,6 +100,93 @@ func (ws *WebServer) Start() {
 	if err != nil {
 		log.Fatal(err)
 	}
+}
+
+func (ws *WebServer) applyAuth() gin.HandlerFunc {
+
+	whitelist := []string{
+		"/login",
+	}
+
+	log.Println("[middleware] apply auth, whitelist:", whitelist)
+
+	whitelistMap := make(map[string]struct{})
+	for _, url := range whitelist {
+		whitelistMap[url] = struct{}{}
+	}
+
+	return func(c *gin.Context) {
+		// Check if the URL is in the whitelist
+		url := c.Request.URL.Path
+		// if match whitelist, skip auth
+		if _, ok := whitelistMap[url]; ok {
+			log.Printf("[middleware] url %s in whitelist, skip auth\n", url)
+			c.Next()
+			return
+		}
+
+		// Check if the Authorization header is present
+		token := c.GetHeader(AuthorizationH)
+		if token == "" {
+			_ = c.AbortWithError(http.StatusBadRequest, errors.New("authorization in header is blank"))
+			return
+		}
+
+		// Check if the token is valid
+		_, ok := ws.cache.Get(token)
+		if !ok {
+			_ = c.AbortWithError(http.StatusUnauthorized, errors.New("invalid token"))
+			return
+		}
+
+		c.Next()
+	}
+
+}
+
+type UserLoginRequest struct {
+	Username string `json:"username"`
+	Password string `json:"password"`
+}
+
+type Response struct {
+	Ok   bool   `json:"ok"`
+	Msg  string `json:"msg"`
+	Data any    `json:"data"`
+}
+
+func (ws *WebServer) handleLogin(c *gin.Context) {
+	var req UserLoginRequest
+	err := c.BindJSON(&req)
+	if err != nil {
+		_ = c.AbortWithError(http.StatusBadRequest, err)
+		return
+	}
+
+	log.Println("login request:", req)
+
+	if req.Username == "" || req.Password == "" {
+		_ = c.AbortWithError(http.StatusBadRequest, errors.New("username or password is blank"))
+		return
+	}
+
+	if req.Username != flags.Username || req.Password != flags.Password {
+		_ = c.AbortWithError(http.StatusUnauthorized, errors.New("invalid username or password"))
+		return
+	}
+
+	token := ws.generateToken()
+	ws.cache.Set(token, "")
+	c.JSON(http.StatusOK, gin.H{
+		"token": token,
+	})
+}
+
+// generate token, uuid + timestamp + random sha1
+func (ws *WebServer) generateToken() string {
+	us := uuid.NewString()
+	ts := time.Now().UnixNano()
+	return fmt.Sprintf("%x", sha1.Sum([]byte(us+strconv.FormatInt(ts, 10))))
 }
 
 func (ws *WebServer) handleLisBuckets(c *gin.Context) {
@@ -346,4 +452,106 @@ func (sc *S3Client) UploadFileFromStream(ctx context.Context, bucket, objectName
 func (sc *S3Client) UploadFileFromBytes(ctx context.Context, bucket, objectName string, bs []byte) error {
 	reader := bytes.NewReader(bs)
 	return sc.UploadFileFromStream(ctx, bucket, objectName, reader, int64(len(bs)))
+}
+
+// entry is used to hold a value in the queue
+type entry struct {
+	key       string
+	value     string
+	timestamp int64 // UNIX timestamp
+}
+
+type LRU struct {
+	capacity int
+	cache    map[string]*list.Element
+	queue    *list.List
+	lock     sync.RWMutex
+	ttl      int64 // Time To Live in seconds
+}
+
+func NewLRU(capacity int, ttl int64) *LRU {
+	lru := &LRU{
+		capacity: capacity,
+		cache:    make(map[string]*list.Element),
+		queue:    list.New(),
+		ttl:      ttl,
+	}
+
+	go lru.purgeRoutine()
+
+	return lru
+}
+
+func (l *LRU) purgeRoutine() {
+	for {
+		l.lock.Lock()
+		for key, el := range l.cache {
+			e := el.Value.(*entry)
+			if time.Now().Unix()-e.timestamp > l.ttl {
+				l.queue.Remove(el)
+				delete(l.cache, key)
+			}
+		}
+		l.lock.Unlock()
+		time.Sleep(time.Duration(l.ttl) * time.Second)
+	}
+}
+
+func (l *LRU) Get(key string) (string, bool) {
+	l.lock.RLock()
+	el, ok := l.cache[key]
+	l.lock.RUnlock()
+
+	if !ok {
+		return "", false
+	}
+
+	l.lock.Lock()
+	l.queue.MoveToFront(el)
+	e := el.Value.(*entry)
+	l.lock.Unlock()
+	return e.value, true
+}
+
+func (l *LRU) Set(key string, value string) {
+	l.lock.Lock()
+	defer l.lock.Unlock()
+
+	if el, ok := l.cache[key]; ok {
+		l.queue.MoveToFront(el)
+		e := el.Value.(*entry)
+		e.value = value
+		e.timestamp = time.Now().Unix()
+	} else {
+		if l.queue.Len() >= l.capacity {
+			el := l.queue.Back()
+			delete(l.cache, el.Value.(*entry).key)
+			l.queue.Remove(el)
+		}
+		e := &entry{key, value, time.Now().Unix()}
+		el := l.queue.PushFront(e)
+		l.cache[key] = el
+	}
+}
+
+// Del deletes a key from the cache
+func (l *LRU) Del(key string) {
+	l.lock.Lock()
+	defer l.lock.Unlock()
+
+	if el, ok := l.cache[key]; ok {
+		delete(l.cache, el.Value.(*entry).key)
+		l.queue.Remove(el)
+	}
+}
+
+// Renew resets the TTL of a key
+func (l *LRU) Renew(key string) {
+	l.lock.Lock()
+	defer l.lock.Unlock()
+
+	if el, ok := l.cache[key]; ok {
+		e := el.Value.(*entry)
+		e.timestamp = time.Now().Unix()
+	}
 }
