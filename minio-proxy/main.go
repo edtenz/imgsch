@@ -13,6 +13,7 @@ import (
 	"github.com/minio/minio-go"
 	"io"
 	"log"
+	"math/rand"
 	"net/http"
 	"os"
 	"strconv"
@@ -66,7 +67,8 @@ func main() {
 }
 
 const (
-	AuthorizationH = "Authorization"
+	AuthorizationH  = "Authorization"
+	TokenCookieName = "X-Token"
 )
 
 type WebServer struct {
@@ -127,11 +129,18 @@ func (ws *WebServer) applyAuth() gin.HandlerFunc {
 			return
 		}
 
+		var token string
+
 		// Check if the Authorization header is present
-		token := c.GetHeader(AuthorizationH)
+		token = c.GetHeader(AuthorizationH)
 		if token == "" {
-			_ = c.AbortWithError(http.StatusBadRequest, errors.New("authorization in header is blank"))
-			return
+			// Check if the token cookie is present
+			tokenCookie, err := c.Request.Cookie(TokenCookieName)
+			if err != nil {
+				_ = c.AbortWithError(http.StatusBadRequest, fmt.Errorf("missing token"))
+				return
+			}
+			token = tokenCookie.Value
 		}
 
 		// Check if the token is valid
@@ -143,6 +152,7 @@ func (ws *WebServer) applyAuth() gin.HandlerFunc {
 
 		// Renew the token
 		ws.cache.Renew(token)
+		ws.setupCookie(c, token)
 
 		c.Next()
 	}
@@ -176,6 +186,7 @@ func (ws *WebServer) handleLogin(c *gin.Context) {
 
 	token := ws.generateToken()
 	ws.cache.Set(token, "")
+	ws.setupCookie(c, token)
 	c.JSON(http.StatusOK, gin.H{
 		"token": token,
 	})
@@ -183,9 +194,26 @@ func (ws *WebServer) handleLogin(c *gin.Context) {
 
 // generate token, uuid + timestamp + random sha1
 func (ws *WebServer) generateToken() string {
-	us := uuid.NewString()
-	ts := time.Now().UnixNano()
-	return fmt.Sprintf("%x", sha1.Sum([]byte(us+strconv.FormatInt(ts, 10))))
+	bff := make([]byte, 0, 64)
+	bff = append(bff, uuid.NewString()...)                             // uuid 36
+	bff = append(bff, strconv.FormatInt(time.Now().UnixNano(), 10)...) // timestamp 19
+	// random int 0-1000000
+	bff = append(bff, strconv.FormatUint((rand.Uint64())%1000000, 10)...) // random 7
+
+	return fmt.Sprintf("%x", sha1.Sum(bff))
+}
+
+func (ws *WebServer) setupCookie(c *gin.Context, token string) {
+	// Set the token cookie
+	tokenCookie := &http.Cookie{
+		Name:     TokenCookieName,
+		Value:    token,
+		Path:     "/",
+		HttpOnly: true,
+		Secure:   false,             // Set to true if using HTTPS
+		MaxAge:   flags.expire * 60, // Cookie expiration time in seconds
+	}
+	http.SetCookie(c.Writer, tokenCookie)
 }
 
 func (ws *WebServer) handleLisBuckets(c *gin.Context) {
