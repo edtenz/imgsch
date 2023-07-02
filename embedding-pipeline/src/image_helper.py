@@ -149,6 +149,9 @@ def thumbnail_bytes(image_bytes: bytes, max_size: int, quality=70) -> bytes:
     image = Image.open(io.BytesIO(image_bytes))
 
     image.thumbnail((max_size, max_size))
+    if image.mode in ('RGBA', 'LA', 'P'):
+        image = image.convert('RGB')
+
     output = io.BytesIO()
     image.save(output, 'JPEG', optimize=True, quality=quality)
     return output.getvalue()

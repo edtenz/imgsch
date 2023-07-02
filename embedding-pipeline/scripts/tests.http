@@ -12,7 +12,7 @@ GET localhost:8090/img/44cffb7fe6339ad06e4f046ae52fa987.jpg
 
 
 ### search
-# curl -X POST -F "file=@/path/to/image.jpg" http://localhost:8080/upload
+# curl -X POST -H "Content-Type: multipart/form-data" -F "file=@../data/bicycle.jpg" http://localhost:8090/search
 POST localhost:8090/search
 Content-Type: multipart/form-data; boundary=WebAppBoundary
 
