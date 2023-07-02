@@ -10,24 +10,24 @@ Content-Type: application/json
 
 ### List buckets
 GET localhost:10086/file/
-Authorization: 8daad628b6cc958c03461d43af933f0558f36cae
+Authorization: 3b86e08df35f6d155f17aef858beb3fdd0ae3869
 
 
 ### List objects
 GET localhost:10086/file/test
-Authorization: 8daad628b6cc958c03461d43af933f0558f36cae
+Authorization: 3b86e08df35f6d155f17aef858beb3fdd0ae3869
 
 
 
 ### Get Image
 GET localhost:10086/file/test/d7d224d86592352e2b0814ceb45d6570.jpg
-Authorization: 8daad628b6cc958c03461d43af933f0558f36cae
+Authorization: 3b86e08df35f6d155f17aef858beb3fdd0ae3869
 
 
 ### Put Image
 # curl -X POST -F "file=@../data/test.jpg" localhost:10086/file/test/002de79efc060d258b033f2509a9b5cb.jpg
 POST localhost:10086/file/test/002de79efc060d258b033f2509a9b5cb.jpg
-Authorization: 8daad628b6cc958c03461d43af933f0558f36cae
+Authorization: 3b86e08df35f6d155f17aef858beb3fdd0ae3869
 Content-Type: multipart/form-data; boundary=WebAppBoundary
 
 --WebAppBoundary

@@ -29,9 +29,10 @@ var flags struct {
 	Username     string
 	Password     string
 	expire       int
+	auth         bool
 }
 
-// minio-proxy -endpoint localhost:9090 -key minioadmin -secret minioadmin -port 10086 -username admin -password admin -expire 1440
+// minio-proxy -endpoint localhost:9090 -key minioadmin -secret minioadmin -port 10086 -username admin -password admin -expire 1440 -auth false
 func main() {
 	flag.StringVar(&flags.Endpoint, "endpoint", "localhost:9090", "s3 endpoint")
 	flag.StringVar(&flags.AccessKey, "key", "minioadmin", "s3 access key")
@@ -40,6 +41,7 @@ func main() {
 	flag.StringVar(&flags.Username, "username", "admin", "http server username")
 	flag.StringVar(&flags.Password, "password", "admin", "http server password")
 	flag.IntVar(&flags.expire, "expire", 24*60, "http server session expire time in minutes")
+	flag.BoolVar(&flags.auth, "auth", false, "enable http server auth")
 
 	flag.Usage = func() {
 		fmt.Fprintf(os.Stderr, "Usage: %s [options]\n", os.Args[0])
@@ -120,6 +122,11 @@ func (ws *WebServer) applyAuth() gin.HandlerFunc {
 	}
 
 	return func(c *gin.Context) {
+		if !flags.auth {
+			c.Next()
+			return
+		}
+
 		// Check if the URL is in the whitelist
 		url := c.Request.URL.Path
 		// if match whitelist, skip auth
@@ -520,7 +527,7 @@ func (l *LRU) purgeRoutine() {
 			}
 		}
 		l.lock.Unlock()
-		time.Sleep(1 * time.Minute)
+		time.Sleep(5 * time.Minute)
 	}
 }
 
