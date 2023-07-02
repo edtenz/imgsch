@@ -27,9 +27,10 @@ var flags struct {
 	Port         int
 	Username     string
 	Password     string
+	expire       int
 }
 
-// minio-proxy -endpoint localhost:9090 -key minioadmin -secret minioadmin -port 10086 -username admin -password admin
+// minio-proxy -endpoint localhost:9090 -key minioadmin -secret minioadmin -port 10086 -username admin -password admin -expire 1440
 func main() {
 	flag.StringVar(&flags.Endpoint, "endpoint", "localhost:9090", "s3 endpoint")
 	flag.StringVar(&flags.AccessKey, "key", "minioadmin", "s3 access key")
@@ -37,6 +38,7 @@ func main() {
 	flag.IntVar(&flags.Port, "port", 10085, "http server port")
 	flag.StringVar(&flags.Username, "username", "admin", "http server username")
 	flag.StringVar(&flags.Password, "password", "admin", "http server password")
+	flag.IntVar(&flags.expire, "expire", 24*60, "http server session expire time in minutes")
 
 	flag.Usage = func() {
 		fmt.Fprintf(os.Stderr, "Usage: %s [options]\n", os.Args[0])
@@ -79,7 +81,7 @@ func NewWebServer(port int, s3Cli *S3Client) *WebServer {
 		port:   port,
 		router: gin.New(),
 		s3Cli:  s3Cli,
-		cache:  NewLRU(10, int64(15*time.Minute.Seconds())),
+		cache:  NewLRU(10, int64(flags.expire)*60),
 	}
 }
 
@@ -138,6 +140,9 @@ func (ws *WebServer) applyAuth() gin.HandlerFunc {
 			_ = c.AbortWithError(http.StatusUnauthorized, errors.New("invalid token"))
 			return
 		}
+
+		// Renew the token
+		ws.cache.Renew(token)
 
 		c.Next()
 	}
@@ -487,7 +492,7 @@ func (l *LRU) purgeRoutine() {
 			}
 		}
 		l.lock.Unlock()
-		time.Sleep(time.Duration(l.ttl) * time.Second)
+		time.Sleep(1 * time.Minute)
 	}
 }
 
