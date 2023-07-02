@@ -19,3 +19,12 @@ def test_do_download():
     image_key = '44cffb7fe6339ad06e4f046ae52fa987.jpg'
     img_path = do_download(image_key, MINIO_CLIENT)
     print(img_path)
+
+
+def test_do_search2():
+    img_url = 'http://localhost:10086/file/imgsch/008e7a0c7582d987b183a59133f7169e.jpg'
+    obj, res = do_search(img_url, VitBase224(), MILVUS_CLIENT, MYSQL_CLIENT, DEFAULT_TABLE)
+    print(obj)
+    print('results size:', len(res))
+    for it in res:
+        print("res:", it)

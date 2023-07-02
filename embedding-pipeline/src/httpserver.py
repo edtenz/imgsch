@@ -1,13 +1,12 @@
-import shutil
-
+import requests
 import uvicorn
 from fastapi import FastAPI, UploadFile, File
 from fastapi.responses import JSONResponse
 from starlette.middleware.cors import CORSMiddleware
 from starlette.responses import FileResponse
 
-from config import HTTP_PORT, MINIO_DOWNLOAD_PATH
-from image_helper import thumbnail
+import image_helper
+from config import HTTP_PORT, MINIO_PROXY_ENDPOINT
 from load import do_embedding
 from logger import LOGGER
 from milvus_helpers import MILVUS_CLIENT
@@ -66,24 +65,33 @@ def get_img(image_key: str):
 
 @app.post("/search")
 async def search(file: UploadFile = File(...)):
-    img_path = f"{MINIO_DOWNLOAD_PATH}/{file.filename}"
-    with open(img_path, "wb") as buffer:
-        shutil.copyfileobj(file.file, buffer)
+    contents = await file.read()
+    resize_img = image_helper.thumbnail_bytes(contents, 450, 60)
+    key = image_helper.md5_content(resize_img)
 
-    resized_img = thumbnail(img_path, 450, f'{MINIO_DOWNLOAD_PATH}/thumbnail/{file.filename}', 60)
-    obj_feat, res_list = do_search(resized_img, MODEL, MILVUS_CLIENT, MYSQL_CLIENT)
+    files = {
+        'file': (key, resize_img, 'image/jpeg'),
+    }
+
+    bucket_name = 'search'
+    upload_url = f'http://{MINIO_PROXY_ENDPOINT}/file/{bucket_name}/{key}'
+    response = requests.post(upload_url, files=files)
+    if response.status_code != 200:
+        return JSONResponse({'status': False, 'msg': 'upload image failed'})
+
+    img_url = upload_url
+    obj_feat, res_list = do_search(img_url, MODEL, MILVUS_CLIENT, MYSQL_CLIENT)
     if obj_feat is None:
         return JSONResponse({'status': False, 'msg': 'image detect or extract failed'})
     if len(res_list) == 0:
         return JSONResponse({'status': False, 'msg': 'no result found'})
     res_list = res_list[:10]
-    upload_res = MINIO_CLIENT.upload(obj_feat.key, resized_img)
 
     data = {
-        'search_img': obj_feat.key,
+        'search_img': obj_feat.url,
         'bbox': list(obj_feat.box),
         'label': obj_feat.label,
-        'score': obj_feat.score,
+        'bbox_score': obj_feat.score,
         'results': [item.to_dict() for item in res_list]
     }
 

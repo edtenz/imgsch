@@ -17,9 +17,9 @@ POST localhost:8090/search
 Content-Type: multipart/form-data; boundary=WebAppBoundary
 
 --WebAppBoundary
-Content-Disposition: form-data; name="file"; filename="image.png"
+Content-Disposition: form-data; name="file"; filename="bicycle.jpg"
 
-< ../data/objects.png
+< ../data/bicycle.jpg
 --WebAppBoundary--
 
 ###

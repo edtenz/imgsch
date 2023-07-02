@@ -27,21 +27,21 @@ class SearchResult(BaseModel):
         }
 
 
-def do_search(img_path: str,
+def do_search(img_url: str,
               model: Model,
               milvus_client: MilvusClient,
               mysql_cli: MysqlClient,
               table_name: str = DEFAULT_TABLE) -> (ObjectFeature, list[SearchResult]):
     """
     Search similar images for the given image.
-    :param img_path: given image path
+    :param img_url: given image path
     :param model: model instance
     :param milvus_client: milvus client
     :param mysql_cli: mysql client
     :param table_name: table name
     :return: list of similar images: [(image_url, similarity), ...]
     """
-    obj_feat = model.extract_primary_features(img_path)
+    obj_feat = model.extract_primary_features(img_url)
     if obj_feat is None:
         return None, []
 

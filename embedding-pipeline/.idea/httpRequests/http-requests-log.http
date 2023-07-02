@@ -1,3 +1,37 @@
+POST http://localhost:8090/search
+Content-Type: multipart/form-data; boundary=WebAppBoundary
+Content-Length: 104008
+Connection: Keep-Alive
+User-Agent: Apache-HttpClient/4.5.14 (Java/17.0.6)
+Accept-Encoding: br,deflate,gzip,x-gzip
+
+--WebAppBoundary
+Content-Disposition: form-data; name="file"; filename="bicycle.jpg"
+
+< /Users/edtenz/Workspaces/edtenz-repo/imgsch/embedding-pipeline/data/bicycle.jpg
+--WebAppBoundary--
+
+<> 2023-07-02T113850.200.json
+
+###
+
+POST http://localhost:8090/search
+Content-Type: multipart/form-data; boundary=WebAppBoundary
+Content-Length: 668284
+Connection: Keep-Alive
+User-Agent: Apache-HttpClient/4.5.14 (Java/17.0.6)
+Accept-Encoding: br,deflate,gzip,x-gzip
+
+--WebAppBoundary
+Content-Disposition: form-data; name="file"; filename="image.png"
+
+< /Users/edtenz/Workspaces/edtenz-repo/imgsch/embedding-pipeline/data/objects.png
+--WebAppBoundary--
+
+<> 2023-07-02T113741.500.txt
+
+###
+
 GET http://localhost:8090/load?img_bucket=imgsch&table_name=milvus_imgsch_tab
 Connection: Keep-Alive
 User-Agent: Apache-HttpClient/4.5.14 (Java/17.0.6)

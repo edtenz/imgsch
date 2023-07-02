@@ -22,7 +22,7 @@ def do_embedding(
     mysql_cli.create_table(table_name)
     LOGGER.info(f"Table information: {table_name}")
 
-    lst_url = f'http://{MINIO_PROXY_ENDPOINT}/api/{bucket_name}'
+    lst_url = f'http://{MINIO_PROXY_ENDPOINT}/file/{bucket_name}'
     LOGGER.info(f"List url: {lst_url}")
     response = requests.get(lst_url)
     LOGGER.debug(f"Response: {response}")

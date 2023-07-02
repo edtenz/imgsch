@@ -64,6 +64,40 @@ class MysqlClient(object):
             LOGGER.error(f"MYSQL ERROR: {e} with sql: {add_data}")
             return False
 
+    def scan_table(self, table_name: str = DEFAULT_TABLE):
+        # Scan mysql table
+        self.test_connection()
+        sql = "select * from " + table_name + ";"
+        try:
+            self.cursor.execute(sql)
+            results = self.cursor.fetchall()
+            LOGGER.debug(f"MYSQL scan table:{table_name}")
+            return results
+        except Exception as e:
+            LOGGER.error(f"MYSQL ERROR: {e} with sql: {sql}")
+            raise Exception("MYSQL ERROR: {} with sql: {}".format(e, sql))
+
+    def update_by_id(self, vec_id: int, image_key: str, box: str,
+                     score: float = 0.0, label: str = '',
+                     table_name: str = DEFAULT_TABLE):
+        # Update mysql table
+        self.test_connection()
+        sql = """
+        update {} set image_key = '{}', box = '{}', score = {}, label = '{}' 
+        where id = {};
+        """.format(table_name,
+                   image_key,
+                   box, score,
+                   label,
+                   vec_id)
+        try:
+            self.cursor.execute(sql)
+            self.conn.commit()
+            LOGGER.debug(f"MYSQL update table:{table_name}")
+        except Exception as e:
+            LOGGER.error(f"MYSQL ERROR: {e} with sql: {sql}")
+            raise Exception("MYSQL ERROR: {} with sql: {}".format(e, sql))
+
     def drop_table(self, table_name: str = DEFAULT_TABLE):
         # Delete mysql table if exists
         self.test_connection()

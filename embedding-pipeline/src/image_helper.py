@@ -1,11 +1,11 @@
 import hashlib
+import io
 import os
 
 import cv2
 import numpy as np
 import requests
 from PIL import Image
-# from towhee._types import Image as TowheeImage
 from towhee import ops
 
 from logger import LOGGER
@@ -137,6 +137,23 @@ def thumbnail(image_path: str, max_size: int, output_dir: str, quality=70) -> st
     return output_path
 
 
+def thumbnail_bytes(image_bytes: bytes, max_size: int, quality=70) -> bytes:
+    """
+    Thumbnail the image to max_size and save it to the output_dir
+    Args:
+        image_bytes: image bytes
+        max_size: max size of the image after resizing, width or height
+        quality: quality of the resized image, 1-100
+    Returns: thumbnail image bytes
+    """
+    image = Image.open(io.BytesIO(image_bytes))
+
+    image.thumbnail((max_size, max_size))
+    output = io.BytesIO()
+    image.save(output, 'JPEG', optimize=True, quality=quality)
+    return output.getvalue()
+
+
 def thumbnail_ops(output_dir: str, max_size: int = 450, quality=60) -> callable:
     def wrapper(image_path: str) -> str:
         return thumbnail(image_path, max_size, output_dir, quality)
@@ -156,14 +173,19 @@ def load_from_local(image_path: str) -> np.ndarray:
     return cv2.imread(image_path)
 
 
+def http_download(image_url: str) -> bytes:
+    r = requests.get(image_url, timeout=(20, 20))
+    if r.status_code // 100 != 2:
+        LOGGER.error('Download image from %s failed, error msg: %s, request code: %s '
+                     % (image_url, r.text, r.status_code))
+        return None
+    return r.content
+
+
 def load_from_remote(image_url: str) -> np.ndarray:
     try:
-        r = requests.get(image_url, timeout=(20, 20))
-        if r.status_code // 100 != 2:
-            LOGGER.error('Download image from %s failed, error msg: %s, request code: %s '
-                         % (image_url, r.text, r.status_code))
-            return None
-        return load_from_bytes(r.content)
+        contents = http_download(image_url)
+        return load_from_bytes(contents)
     except Exception as e:
         LOGGER.error('Download image from %s failed, error msg: %s' % (image_url, str(e)))
         return False

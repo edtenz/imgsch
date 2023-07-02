@@ -298,6 +298,12 @@ func (ws *WebServer) handlePutObject(c *gin.Context) {
 		return
 	}
 
+	err := ws.s3Cli.CreateBucket(c.Request.Context(), bucket)
+	if err != nil {
+		_ = c.AbortWithError(http.StatusInternalServerError, fmt.Errorf("create bucket err: %s", err.Error()))
+		return
+	}
+
 	// Single file
 	file, err := c.FormFile("file")
 	if err != nil {
@@ -486,6 +492,17 @@ func (sc *S3Client) UploadFileFromStream(ctx context.Context, bucket, objectName
 func (sc *S3Client) UploadFileFromBytes(ctx context.Context, bucket, objectName string, bs []byte) error {
 	reader := bytes.NewReader(bs)
 	return sc.UploadFileFromStream(ctx, bucket, objectName, reader, int64(len(bs)))
+}
+
+// CreateBucket creates a bucket if not exist
+func (sc *S3Client) CreateBucket(ctx context.Context, bucket string) error {
+	if exist, err := sc.minioClient.BucketExists(bucket); err != nil {
+		return err
+	} else if exist {
+		return nil
+	} else {
+		return sc.minioClient.MakeBucket(bucket, "")
+	}
 }
 
 // entry is used to hold a value in the queue

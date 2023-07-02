@@ -38,7 +38,7 @@ def test_load_from_local():
 
 
 def test_load_from_remote():
-    bs = image_helper.load_from_remote('http://localhost:10086/api/imgsch/000c9b3463d25d5fee7bcb4c473393f3.jpg')
+    bs = image_helper.load_from_remote('http://localhost:10086/file/imgsch/000c9b3463d25d5fee7bcb4c473393f3.jpg')
     print(len(bs))
     assert len(bs) > 0
     'empty bytes'
@@ -52,8 +52,15 @@ def test_load_image_ops():
 
 
 def test_load_http_image_ops():
-    bs = image_helper.load_image_ops('http://localhost:10086/api/imgsch/000c9b3463d25d5fee7bcb4c473393f3.jpg')
+    bs = image_helper.load_image_ops('http://localhost:10086/file/imgsch/000c9b3463d25d5fee7bcb4c473393f3.jpg')
     print(len(bs))
     print(bs)
     assert len(bs) > 0
     'empty bytes'
+
+
+def test_thumbnail_bytes():
+    bs = image_helper.http_download('http://localhost:10086/file/imgsch/000c9b3463d25d5fee7bcb4c473393f3.jpg')
+    print("origin:", len(bs))
+    bs = image_helper.thumbnail_bytes(bs, 50, 60)
+    print("thumbnail:", len(bs))
