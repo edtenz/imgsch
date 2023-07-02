@@ -36,6 +36,15 @@ def ping():
     return {"message": "pong"}
 
 
+@app.get("/test")
+def ping(q: str):
+    LOGGER.debug(f"test, keywords: {q}")
+    return [
+        {"id": 1, "name": "test1", "url": "http://localhost:10086/file/imgsch/008e7a0c7582d987b183a59133f7169e.jpg"},
+        {"id": 2, "name": "test2", "url": "http://localhost:10086/file/imgsch/008e7a0c7582d987b183a59133f7169e.jpg"},
+    ]
+
+
 @app.get('/load')
 def load_img(img_bucket: str, table_name: str):
     try:
