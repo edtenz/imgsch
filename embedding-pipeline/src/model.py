@@ -1,12 +1,28 @@
 from pydantic import BaseModel
 from towhee import pipe, ops, AutoConfig
 
+from logger import LOGGER
 
-class ObjectFeature(BaseModel):
-    url: str
+
+class BoundingBox(BaseModel):
     box: tuple[int, int, int, int]
     label: str
     score: float
+
+    def __str__(self):
+        return f"box: {self.box}, label: {self.label}, score: {self.score}"
+
+    def to_dict(self):
+        return {
+            "box": list(self.box),
+            "label": self.label,
+            "score": self.score
+        }
+
+
+class ObjectFeature(BaseModel):
+    url: str
+    bbox: BoundingBox
     features: list[float]
 
     def to_dict(self) -> dict:
@@ -16,9 +32,7 @@ class ObjectFeature(BaseModel):
         """
         return {
             'url': self.url,
-            'box': self.box,
-            'label': self.label,
-            'score': self.score,
+            'bbox': self.bbox.to_dict(),
             'features': self.features
         }
 
@@ -73,9 +87,9 @@ class ImageFeatureModel(object):
         for i in range(res.size):
             it = res.get()
             obj_feat = ObjectFeature(url=it[0],
-                                     box=tuple(it[1]),
-                                     label=it[2],
-                                     score=it[3],
+                                     bbox=BoundingBox(box=tuple(it[1]),
+                                                      label=it[2],
+                                                      score=it[3]),
                                      features=it[4].tolist())
             # append to list
             obj_feat_list.append(obj_feat)
@@ -84,11 +98,11 @@ class ImageFeatureModel(object):
                 break
         return obj_feat_list
 
-    def extract_primary_features(self, url: str) -> ObjectFeature:
+    def extract_primary_features(self, url: str) -> (ObjectFeature, list[BoundingBox]):
         """
         Extract feature from local file or url
         :param url: url or local file path
-        :return: object features
+        :return: object features, candidate bbox list: (box, label, score)
         """
 
         decode_p = (
@@ -99,7 +113,7 @@ class ImageFeatureModel(object):
 
         res = decode_p(url)
         if res.size == 0:
-            return None
+            return None, []
         img = res.get()[0]
         full_height, full_width, _ = img.shape
         detect_p = (
@@ -109,14 +123,21 @@ class ImageFeatureModel(object):
         )
 
         res = detect_p(url)
-        box = None
+        box = [0, 0, 0 + full_width, 0 + full_height]
         label = ''
         score = 0.0
+        candidate_list = []
         if res.size == 0:
-            box = [0, 0, full_width, full_height]
+            LOGGER.info('No object detected')
         else:
-            it = res.get()
-            box, label, score = it[0], it[1], it[2]
+            for i in range(res.size):
+                it = res.get()
+                if i == 0:
+                    box, label, score = it[0], it[1], it[2]
+                else:
+                    candidate_list.append(BoundingBox(box=it[0],
+                                                      label=it[1],
+                                                      score=it[2]))
 
         extract_p = (
             pipe.input('img', 'box')
@@ -129,14 +150,18 @@ class ImageFeatureModel(object):
 
         res = extract_p(img, box)
         if res.size == 0:
-            return None
+            return ObjectFeature(url=url,
+                                 bbox=BoundingBox(box=tuple(box),
+                                                  label=label,
+                                                  score=score),
+                                 features=None), candidate_list
 
         it = res.get()
         return ObjectFeature(url=url,
-                             box=tuple(box),
-                             label=label,
-                             score=score,
-                             features=it[0].tolist())
+                             bbox=BoundingBox(box=tuple(box),
+                                              label=label,
+                                              score=score),
+                             features=it[0].tolist()), candidate_list
 
 
 class Resnet50(ImageFeatureModel):

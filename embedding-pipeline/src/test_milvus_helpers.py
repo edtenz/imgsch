@@ -11,7 +11,8 @@ def test_insert():
     MILVUS_CLIENT.create_collection(table_name, dim)
 
     vit_model = VitTiny224()
-    obj_feat = vit_model.extract_primary_features('../data/objects.png')
+    obj_feat, candidate_box = vit_model.extract_primary_features('../data/objects.png')
+    print('candidate_box:', candidate_box)
     if obj_feat is None:
         print('extract feature failed')
         return
@@ -31,7 +32,8 @@ def test_insert():
 
 def test_search_vectors():
     vit_model = VitTiny224()
-    obj_feat = vit_model.extract_primary_features('../data/test.jpg')
+    obj_feat, candidate_box = vit_model.extract_primary_features('../data/test.jpg')
+    print('candidate_box:', candidate_box)
     print('vector size:', len(obj_feat.features))
     res = MILVUS_CLIENT.search_vectors(DEFAULT_TABLE, obj_feat.features, 10)
     print(res)

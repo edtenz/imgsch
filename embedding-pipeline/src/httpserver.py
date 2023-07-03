@@ -98,9 +98,7 @@ async def search(file: UploadFile = File(...)):
 
     data = {
         'search_img': obj_feat.url,
-        'bbox': list(obj_feat.box),
-        'label': obj_feat.label,
-        'bbox_score': obj_feat.score,
+        'bbox': obj_feat.bbox.to_dict(),
         'results': [item.to_dict() for item in res_list]
     }
 

@@ -41,9 +41,11 @@ def do_search(img_url: str,
     :param table_name: table name
     :return: list of similar images: [(image_url, similarity), ...]
     """
-    obj_feat = model.extract_primary_features(img_url)
+    obj_feat, candidate_box = model.extract_primary_features(img_url)
     if obj_feat is None:
         return None, []
+    if obj_feat.features is None:
+        return obj_feat, []
 
     p_search_pre = (
         pipe.input('vec')
