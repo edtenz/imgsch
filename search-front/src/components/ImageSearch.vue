@@ -2,15 +2,22 @@
   <div>
     <input type="file" @change="handleFileUpload"/>
     <button @click="search">Search</button>
-    <div v-if="searchResult">
-      <p>Searched Image:</p>
-      <div class="search-image-container" :style="bboxStyle(searchResult.bbox)">
+    <div v-if="searchResult" class="results-container">
+      <div class="search-image-container" :style="bboxStyle(searchResult.bbox.box)">
         <img :src="searchResult.search_img" alt="Searched Image" @load="imageLoaded"/>
       </div>
       <div>
-        Bounding Box: {{ searchResult.bbox.join(',') }}
-        Label: {{ searchResult.label }}
-        Bounding Box Score: {{ searchResult.bbox_score }}
+        Bounding Box: {{ searchResult.bbox.box.join(',') }}
+        Label: {{ searchResult.bbox.label }}
+        Bounding Box Score: {{ searchResult.bbox.score }}
+      </div>
+      <p>Candidate Boxes:</p>
+      <div v-for="cbox in searchResult.candidate_box" :key="cbox.box.join(',')">
+        <div :style="bboxStyle(cbox.box)">
+          Box: {{ cbox.box.join(',') }}
+          Label: {{ cbox.label }}
+          Score: {{ cbox.score }}
+        </div>
       </div>
       <p>Similar Images:</p>
       <div v-for="result in searchResult.results" :key="result.image_key">

@@ -89,7 +89,7 @@ async def search(file: UploadFile = File(...)):
         return JSONResponse({'status': False, 'msg': 'upload image failed'})
 
     img_url = upload_url
-    obj_feat, res_list = do_search(img_url, MODEL, MILVUS_CLIENT, MYSQL_CLIENT)
+    obj_feat, candidate_box, res_list = do_search(img_url, MODEL, MILVUS_CLIENT, MYSQL_CLIENT)
     if obj_feat is None:
         return JSONResponse({'status': False, 'msg': 'image detect or extract failed'})
     if len(res_list) == 0:
@@ -99,6 +99,7 @@ async def search(file: UploadFile = File(...)):
     data = {
         'search_img': obj_feat.url,
         'bbox': obj_feat.bbox.to_dict(),
+        'candidate_box': [item.to_dict() for item in candidate_box],
         'results': [item.to_dict() for item in res_list]
     }
 

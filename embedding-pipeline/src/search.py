@@ -5,7 +5,7 @@ from config import DEFAULT_TABLE, MINIO_BUCKET_NAME
 from logger import LOGGER
 from milvus_helpers import MilvusClient, search_milvus_ops
 from minio_helpers import MinioClient, download_minio_ops
-from model import ImageFeatureModel, ObjectFeature
+from model import ImageFeatureModel, ObjectFeature, BoundingBox
 from mysql_helpers import MysqlClient, query_mysql_ops
 
 
@@ -31,7 +31,7 @@ def do_search(img_url: str,
               model: ImageFeatureModel,
               milvus_client: MilvusClient,
               mysql_cli: MysqlClient,
-              table_name: str = DEFAULT_TABLE) -> (ObjectFeature, list[SearchResult]):
+              table_name: str = DEFAULT_TABLE) -> (ObjectFeature, list[BoundingBox], list[SearchResult]):
     """
     Search similar images for the given image.
     :param img_url: given image path
@@ -43,9 +43,9 @@ def do_search(img_url: str,
     """
     obj_feat, candidate_box = model.extract_primary_features(img_url)
     if obj_feat is None:
-        return None, []
+        return None, candidate_box, []
     if obj_feat.features is None:
-        return obj_feat, []
+        return obj_feat, candidate_box, []
 
     p_search_pre = (
         pipe.input('vec')
@@ -64,7 +64,7 @@ def do_search(img_url: str,
         it = res.get()
         search_res = SearchResult(image_key=it[0], box=it[1], label=it[2], score=it[3])
         res_list.append(search_res)
-    return obj_feat, res_list
+    return obj_feat, candidate_box, res_list
 
 
 def do_download(image_key: str,
