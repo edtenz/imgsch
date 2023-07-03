@@ -5,7 +5,7 @@ from config import DEFAULT_TABLE, MINIO_BUCKET_NAME
 from logger import LOGGER
 from milvus_helpers import MilvusClient, search_milvus_ops
 from minio_helpers import MinioClient, download_minio_ops
-from model import Model, ObjectFeature
+from model import ImageFeatureModel, ObjectFeature
 from mysql_helpers import MysqlClient, query_mysql_ops
 
 
@@ -28,7 +28,7 @@ class SearchResult(BaseModel):
 
 
 def do_search(img_url: str,
-              model: Model,
+              model: ImageFeatureModel,
               milvus_client: MilvusClient,
               mysql_cli: MysqlClient,
               table_name: str = DEFAULT_TABLE) -> (ObjectFeature, list[SearchResult]):

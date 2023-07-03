@@ -26,7 +26,7 @@ class ObjectFeature(BaseModel):
         return self.to_dict().__str__()
 
 
-class Model(object):
+class ImageFeatureModel(object):
 
     def __init__(self, model_name: str):
         self.auto_config = AutoConfig.LocalCPUConfig()
@@ -139,19 +139,19 @@ class Model(object):
                              features=it[0].tolist())
 
 
-class Resnet50(Model):
+class Resnet50(ImageFeatureModel):
 
     def __init__(self):
         super().__init__('resnet50')
 
 
-class VitTiny224(Model):
+class VitTiny224(ImageFeatureModel):
 
     def __init__(self):
         super().__init__('vit_tiny_patch16_224')
 
 
-class VitBase224(Model):
+class VitBase224(ImageFeatureModel):
 
     def __init__(self):
         super().__init__('vit_base_patch16_224')

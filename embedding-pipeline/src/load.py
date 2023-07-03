@@ -5,13 +5,13 @@ import requests
 from config import DEFAULT_TABLE, VECTOR_DIMENSION, MINIO_PROXY_ENDPOINT
 from logger import LOGGER
 from milvus_helpers import MilvusClient, insert_milvus_ops
-from model import Model
+from model import ImageFeatureModel
 from mysql_helpers import MysqlClient, insert_mysql_ops
 
 
 def do_embedding(
         bucket_name: str,
-        model: Model,
+        model: ImageFeatureModel,
         milvus_client: MilvusClient,
         mysql_cli: MysqlClient,
         table_name: str = DEFAULT_TABLE,
@@ -52,7 +52,7 @@ def do_embedding(
 
 
 def embedding_pipeline(img_url: str,
-                       model: Model,
+                       model: ImageFeatureModel,
                        milvus_client: MilvusClient,
                        mysql_cli: MysqlClient,
                        table_name: str = DEFAULT_TABLE) -> bool:
