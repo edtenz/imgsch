@@ -3,6 +3,7 @@
     <input type="file" @change="handleFileUpload"/>
     <button @click="search">Search</button>
     <div v-if="searchResult">
+      <p>Searched Image:</p>
       <div class="search-image-container" :style="bboxStyle(searchResult.bbox)">
         <img :src="searchResult.search_img" alt="Searched Image" @load="imageLoaded"/>
       </div>
