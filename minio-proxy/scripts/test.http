@@ -25,8 +25,8 @@ Authorization: 3b86e08df35f6d155f17aef858beb3fdd0ae3869
 
 
 ### Put Image
-# curl -X POST -F "file=@../data/test.jpg" localhost:10086/file/test/002de79efc060d258b033f2509a9b5cb.jpg
-POST localhost:10086/file/test/002de79efc060d258b033f2509a9b5cb.jpg
+# curl -X POST -F "file=@../data/test.jpg" localhost:10086/file/test/002de79efc060d258b033f2509a9b5cb
+POST localhost:10086/file/test/002de79efc060d258b033f2509a9b5cb
 Authorization: 3b86e08df35f6d155f17aef858beb3fdd0ae3869
 Content-Type: multipart/form-data; boundary=WebAppBoundary
 

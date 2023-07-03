@@ -259,7 +259,7 @@ func (ws *WebServer) handleGetObject(c *gin.Context) {
 		return
 	}
 
-	bs, err := ws.s3Cli.FetchStream(c.Request.Context(), bucket, key)
+	bs, err := ws.s3Cli.FetchStream(c.Request.Context(), bucket, key, minio.GetObjectOptions{})
 	if err != nil {
 		if errors.Is(err, ErrNotFound) {
 			log.Printf("fetch object failed, object not found: %+v", err)
@@ -325,7 +325,12 @@ func (ws *WebServer) handlePutObject(c *gin.Context) {
 		return
 	}
 
-	err = ws.s3Cli.UploadFileFromBytes(c.Request.Context(), bucket, key, bs)
+	contentType := http.DetectContentType(bs)
+	opts := minio.PutObjectOptions{
+		ContentType: contentType,
+	}
+
+	err = ws.s3Cli.UploadFileFromBytes(c.Request.Context(), bucket, key, bs, opts)
 	if err != nil {
 		_ = c.AbortWithError(http.StatusInternalServerError, fmt.Errorf("upload file err: %s", err.Error()))
 		return
@@ -411,8 +416,9 @@ func (sc *S3Client) ListFiles(bucket, objectPrefix string) (lst []string) {
 	return lst
 }
 
-func (sc *S3Client) Fetch(ctx context.Context, bucket, objectName, localFile string) error {
-	err := sc.minioClient.FGetObjectWithContext(ctx, bucket, objectName, localFile, minio.GetObjectOptions{})
+func (sc *S3Client) Fetch(ctx context.Context, bucket, objectName, localFile string,
+	opts minio.GetObjectOptions) error {
+	err := sc.minioClient.FGetObjectWithContext(ctx, bucket, objectName, localFile, opts)
 	if err != nil {
 		var respErr minio.ErrorResponse
 		if errors.As(err, &respErr) {
@@ -427,8 +433,9 @@ func (sc *S3Client) Fetch(ctx context.Context, bucket, objectName, localFile str
 	return nil
 }
 
-func (sc *S3Client) FetchStream(ctx context.Context, bucket, objectName string) ([]byte, error) {
-	obj, err := sc.minioClient.GetObjectWithContext(ctx, bucket, objectName, minio.GetObjectOptions{})
+func (sc *S3Client) FetchStream(ctx context.Context, bucket, objectName string,
+	opts minio.GetObjectOptions) ([]byte, error) {
+	obj, err := sc.minioClient.GetObjectWithContext(ctx, bucket, objectName, opts)
 	if err != nil {
 		return nil, fmt.Errorf("get object failed: %w", err)
 	}
@@ -470,8 +477,9 @@ func (sc *S3Client) FetchStream(ctx context.Context, bucket, objectName string) 
 }
 
 // UploadFile uploads a file to s3
-func (sc *S3Client) UploadFile(ctx context.Context, bucket, objectName, localFile string) error {
-	_, err := sc.minioClient.FPutObjectWithContext(ctx, bucket, objectName, localFile, minio.PutObjectOptions{})
+func (sc *S3Client) UploadFile(ctx context.Context, bucket, objectName, localFile string,
+	opts minio.PutObjectOptions) error {
+	_, err := sc.minioClient.FPutObjectWithContext(ctx, bucket, objectName, localFile, opts)
 	if err != nil {
 		return err
 	}
@@ -480,8 +488,9 @@ func (sc *S3Client) UploadFile(ctx context.Context, bucket, objectName, localFil
 }
 
 // UploadFileFromStream uploads a file from stream to s3
-func (sc *S3Client) UploadFileFromStream(ctx context.Context, bucket, objectName string, reader io.Reader, size int64) error {
-	_, err := sc.minioClient.PutObjectWithContext(ctx, bucket, objectName, reader, size, minio.PutObjectOptions{})
+func (sc *S3Client) UploadFileFromStream(ctx context.Context, bucket, objectName string, reader io.Reader, size int64,
+	opts minio.PutObjectOptions) error {
+	_, err := sc.minioClient.PutObjectWithContext(ctx, bucket, objectName, reader, size, opts)
 	if err != nil {
 		return err
 	}
@@ -489,9 +498,10 @@ func (sc *S3Client) UploadFileFromStream(ctx context.Context, bucket, objectName
 }
 
 // UploadFileFromBytes uploads a file from bytes to s3
-func (sc *S3Client) UploadFileFromBytes(ctx context.Context, bucket, objectName string, bs []byte) error {
+func (sc *S3Client) UploadFileFromBytes(ctx context.Context, bucket, objectName string, bs []byte,
+	opts minio.PutObjectOptions) error {
 	reader := bytes.NewReader(bs)
-	return sc.UploadFileFromStream(ctx, bucket, objectName, reader, int64(len(bs)))
+	return sc.UploadFileFromStream(ctx, bucket, objectName, reader, int64(len(bs)), opts)
 }
 
 // CreateBucket creates a bucket if not exist
