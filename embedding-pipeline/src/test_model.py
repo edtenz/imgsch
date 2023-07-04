@@ -20,7 +20,7 @@ def test_vit224_extract_features():
 
 def test_vit224_url_extract_features():
     model = VitTiny224()
-    obj_features = model.extract_features('http://localhost:10086/api/imgsch/000c9b3463d25d5fee7bcb4c473393f3.jpg')
+    obj_features = model.extract_features('http://localhost:10086/file/imgsch/000c9b3463d25d5fee7bcb4c473393f3.jpg')
     for obj_feat in obj_features:
         print(obj_feat)
         assert len(obj_feat.features) == 192
@@ -29,8 +29,8 @@ def test_vit224_url_extract_features():
 def test_vitTiny224_extract_primary_features():
     model = VitTiny224()
     obj_feat, candidate_box = model.extract_primary_features('../data/objects.png')
-    print('candidate_box:', candidate_box)
     print(obj_feat)
+    print(candidate_box)
     assert len(obj_feat.features) == 192
 
 
@@ -38,14 +38,16 @@ def test_vitBase224_extract_primary_features():
     model = VitBase224()
     obj_feat, candidate_box = model.extract_primary_features('../data/objects.png')
     print(obj_feat)
+    print(candidate_box)
     assert len(obj_feat.features) == 768
 
 
 def test_vitBase224_url_extract_primary_features():
     model = VitBase224()
     obj_feat, candidate_box = model.extract_primary_features(
-        'http://localhost:10086/api/imgsch/000c9b3463d25d5fee7bcb4c473393f3.jpg')
+        'http://localhost:10086/file/imgsch/000c9b3463d25d5fee7bcb4c473393f3.jpg')
     print(obj_feat)
+    print(candidate_box)
     assert len(obj_feat.features) == 768
 
 
@@ -58,6 +60,7 @@ def test_vitBase224_local_extract_primary_features():
     model = VitBase224()
     obj_feat, candidate_box = model.extract_primary_features('../data/objects.png')
     print(obj_feat)
+    print(candidate_box)
     assert len(obj_feat.features) == 768
 
 

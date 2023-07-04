@@ -3,6 +3,9 @@
     <input type="file" @change="handleFileUpload"/>
     <button @click="search">Search</button>
     <div v-if="searchResult" class="results-container">
+      <!--      <div class="image-container">-->
+      <!--        <canvas ref="canvas"></canvas>-->
+      <!--      </div>-->
       <div class="search-image-container" :style="bboxStyle(searchResult.bbox.box)">
         <img :src="searchResult.search_img" alt="Searched Image" @load="imageLoaded"/>
       </div>
@@ -16,7 +19,7 @@
         <div :style="bboxStyle(cbox.box)">
           Box: {{ cbox.box.join(',') }}
           Label: {{ cbox.label }}
-          Score: {{ cbox.score }}
+          Bounding Box Score: {{ cbox.score }}
         </div>
       </div>
       <p>Similar Images:</p>
@@ -103,7 +106,48 @@ export default {
       imageLoaded,
       bboxStyle
     };
-  }
+  },
+
+  mounted() {
+    this.$nextTick(() => {
+      this.drawImageAndBoxes();
+    });
+  },
+
+  methods: {
+    drawImageAndBoxes() {
+      const canvas = this.$refs.canvas;
+      const context = canvas.getContext('2d');
+      const image = new Image();
+
+      image.onload = () => {
+        canvas.width = image.width;
+        canvas.height = image.height;
+
+        context.drawImage(image, 0, 0, image.width, image.height);
+
+        // Draw main bounding box (bbox)
+        let [x1, y1, x2, y2] = this.searchResult.bbox.box;
+        context.beginPath();
+        context.rect(x1, y1, x2 - x1, y2 - y1);
+        context.lineWidth = 3;
+        context.strokeStyle = 'red';
+        context.stroke();
+
+        // Draw candidate bounding boxes
+        this.searchResult.candidate_box.forEach(cbox => {
+          let [x1, y1, x2, y2] = cbox.box;
+          context.beginPath();
+          context.rect(x1, y1, x2 - x1, y2 - y1);
+          context.lineWidth = 3;
+          context.strokeStyle = 'green';
+          context.stroke();
+        });
+      };
+
+      image.src = this.searchResult.search_img;
+    },
+  },
 };
 </script>
 
@@ -120,11 +164,20 @@ export default {
   pointer-events: none;
 }
 
+
 .search-image-container,
 .result-image-container {
   position: relative;
   display: inline-block;
 }
 
+.image-container {
+  position: relative;
+}
 
+canvas {
+  position: absolute;
+  top: 0;
+  left: 0;
+}
 </style>

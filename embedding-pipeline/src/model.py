@@ -111,10 +111,10 @@ class ImageFeatureModel(object):
             .output('img')
         )
 
-        res = decode_p(url)
-        if res.size == 0:
+        decode_res = decode_p(url)
+        if decode_res.size == 0:
             return None, []
-        img = res.get()[0]
+        img = decode_res.get()[0]
         full_height, full_width, _ = img.shape
         detect_p = (
             pipe.input('img')
@@ -122,22 +122,23 @@ class ImageFeatureModel(object):
             .output('box', 'label', 'score')
         )
 
-        res = detect_p(url)
+        detect_res = detect_p(url)
         box = [0, 0, 0 + full_width, 0 + full_height]
         label = ''
         score = 0.0
         candidate_list = []
-        if res.size == 0:
-            LOGGER.info('No object detected')
+
+        if detect_res.size == 0:
+            LOGGER.debug(f'No object detected of {url}')
         else:
-            for i in range(res.size):
-                it = res.get()
+            for i in range(detect_res.size):
+                detect_item = detect_res.get()
                 if i == 0:
-                    box, label, score = it[0], it[1], it[2]
+                    box, label, score = detect_item[0], detect_item[1], detect_item[2]
                 else:
-                    candidate_list.append(BoundingBox(box=it[0],
-                                                      label=it[1],
-                                                      score=it[2]))
+                    candidate_list.append(BoundingBox(box=detect_item[0],
+                                                      label=detect_item[1],
+                                                      score=detect_item[2]))
 
         extract_p = (
             pipe.input('img', 'box')
@@ -148,20 +149,13 @@ class ImageFeatureModel(object):
             .output('vec')
         )
 
-        res = extract_p(img, box)
-        if res.size == 0:
-            return ObjectFeature(url=url,
-                                 bbox=BoundingBox(box=tuple(box),
-                                                  label=label,
-                                                  score=score),
-                                 features=None), candidate_list
+        extract_res = extract_p(img, box)
+        bbox = BoundingBox(box=tuple(box), label=label, score=score)
+        if extract_res.size == 0:
+            return ObjectFeature(url=url, bbox=bbox, features=None), candidate_list
 
-        it = res.get()
-        return ObjectFeature(url=url,
-                             bbox=BoundingBox(box=tuple(box),
-                                              label=label,
-                                              score=score),
-                             features=it[0].tolist()), candidate_list
+        extract_item = extract_res.get()
+        return ObjectFeature(url=url, bbox=bbox, features=extract_item[0].tolist()), candidate_list
 
 
 class Resnet50(ImageFeatureModel):
@@ -180,3 +174,23 @@ class VitBase224(ImageFeatureModel):
 
     def __init__(self):
         super().__init__('vit_base_patch16_224')
+
+
+def extract_features_ops(model: ImageFeatureModel) -> callable:
+    """
+    Extract feature from local file or url
+    :param model: model
+    :return: sbox, label, score, features
+    """
+
+    def wrapper(url: str) -> (str, str, float, list[float]):
+        obj_feat, candidate_boxes = model.extract_primary_features(url)
+        if obj_feat is None:
+            return '', '', 0.0, []
+        if obj_feat.bbox is None:
+            return '', '', 0.0, []
+        bbox = obj_feat.bbox
+        sbox = ','.join(str(item) for item in list(bbox.box))
+        return sbox, bbox.label, bbox.score, obj_feat.features
+
+    return wrapper

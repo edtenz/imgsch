@@ -34,7 +34,7 @@ def do_embedding(
     success_count = 0
     for i, object_name in enumerate(object_names):
         LOGGER.info(f"Process file {object_name}, {i + 1}/{total}")
-        img_url = f'http://{MINIO_PROXY_ENDPOINT}/api/{bucket_name}/{object_name}'
+        img_url = f'http://{MINIO_PROXY_ENDPOINT}/file/{bucket_name}/{object_name}'
         try:
             ok = embedding_pipeline(img_url, model, milvus_client, mysql_cli, table_name)
             if ok:
@@ -58,10 +58,13 @@ def embedding_pipeline(img_url: str,
                        table_name: str = DEFAULT_TABLE) -> bool:
     p_insert = (
         model.pipeline()
+        .filter(('vec',), ('vec',), 'vec', lambda x: x is not None and len(x) > 0)
         .map('vec', 'id', insert_milvus_ops(milvus_client, table_name))
+        .filter(('id',), ('id',), 'id', lambda x: x is not None and len(x) > 0)
         .map(('id', 'url', 'sbox', 'score', 'label'), 'db_res', insert_mysql_ops(mysql_cli, table_name))
         .output('url', 'sbox', 'label', 'score', 'id', 'db_res')
     )
+
     LOGGER.debug(f"Process file from url: {img_url}")
     res = p_insert(img_url)
     size = res.size
