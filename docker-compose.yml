@@ -62,6 +62,40 @@ services:
       - "etcd"
       - "minio"
 
+  elasticsearch:
+      container_name: imgsch-elasticsearch
+      image: docker.elastic.co/elasticsearch/elasticsearch:8.8.2-arm64
+      ports:
+        - "9200:9200"
+        - "9300:9300"
+      restart: always
+      environment:
+        - discovery.type=single-node
+        - xpack.security.enabled=false
+        - ES_JAVA_OPTS=-Xms512m -Xmx1g
+        # - ELASTIC_PASSWORD=admin123
+        # - ENROLLMENT_TOKEN=07853bff7c7b982f11c7d08b234b991b
+        # docker exec -it imgsch-elasticsearch /usr/share/elasticsearch/bin/elasticsearch-create-enrollment-token -s kibana
+      ulimits:
+        memlock:
+          soft: -1
+          hard: -1
+      volumes:
+        - ${DOCKER_VOLUME_DIRECTORY:-.}/volumes/elasticsearch:/usr/share/elasticsearch/data
+
+  kibana:
+    container_name: imgsch-kibana
+    image: docker.elastic.co/kibana/kibana:8.8.2-arm64
+    ports:
+      - 5601:5601
+    environment:
+      - ELASTICSEARCH_HOSTS=http://elasticsearch:9200
+      # docker exec -it imgsch-kibana /usr/share/kibana/bin/kibana-verification-code
+    restart: always
+    depends_on:
+      - elasticsearch
+    volumes:
+      - ${DOCKER_VOLUME_DIRECTORY:-.}/volumes/kibana:/usr/share/kibana/data
 
 networks:
   default:
