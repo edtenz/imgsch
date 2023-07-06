@@ -34,3 +34,8 @@ MYSQL_DB = os.getenv("MYSQL_DB", "imgsch_db")
 
 ############### Data Path ###############
 UPLOAD_PATH = os.getenv("UPLOAD_PATH", "tmp/search-images")
+
+
+############### ES Configuration ###############
+ES_HOST = os.getenv("ES_HOST", "localhost")
+ES_PORT = int(os.getenv("ES_PORT", "9200"))
