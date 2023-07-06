@@ -1,0 +1,36 @@
+# use these commands in kibana dev tools
+
+### show nodes
+GET /_cat/nodes?v
+
+### create index
+PUT testindex
+{
+ "mappings": {
+   "properties": {
+     "image-vector": {
+       "type": "dense_vector",
+       "dims": 4,
+       "index": true,
+       "similarity": "l2_norm"
+     }
+   }
+ }
+}
+
+### add test data
+POST testindex/_doc
+{
+ "image-vector": [0.12, 1.34, 0.154, 0.345]
+}
+
+### vector search
+GET testindex/_knn_search
+{
+ "knn": {
+   "field": "image-vector",
+   "query_vector": [0.1, 1.1, 0.2, 0.3],
+   "k": 10,
+   "num_candidates": 100
+ }
+}
