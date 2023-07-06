@@ -9,6 +9,8 @@ cryptography==41.0.1
 cycler==0.11.0
 dill==0.3.6
 docutils==0.20.1
+elastic-transport==8.4.0
+elasticsearch==8.8.0
 exceptiongroup==1.1.1
 fastapi==0.96.1
 filelock==3.12.0
@@ -93,8 +95,7 @@ typing_extensions==4.6.3
 tzdata==2023.3
 ujson==5.4.0
 ultralytics==8.0.114
-urllib3==2.0.3
+urllib3==1.26.16
 uvicorn==0.22.0
 webencodings==0.5.1
 zipp==3.15.0
-elasticsearch==8.8.0
