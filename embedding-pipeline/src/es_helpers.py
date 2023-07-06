@@ -76,6 +76,20 @@ class EsClient(object):
             LOGGER.error(f"Failed to insert documents: {e}")
             return 0
 
+    def query(self, index_name: str, body: dict) -> list[dict]:
+        """
+        Query documents
+        :param index_name: index name in Elasticsearch
+        :param body: query body
+        :return:
+        """
+        try:
+            res = self.es.search(index=index_name, body=body)
+            return res['hits']['hits']
+        except Exception as e:
+            LOGGER.error(f"Failed to query documents: {e}")
+            return []
+
 
 def insert_doc_ops(es_cli: EsClient, index_name: str = ES_INDEX):
     def wrapper(doc: dict, id: str = None) -> bool:
@@ -98,5 +112,32 @@ def bulk_docs_ops(es_cli: EsClient, index_name: str = ES_INDEX):
         :return:
         """
         return es_cli.insert_batch(index_name, docs)
+
+    return wrapper
+
+
+def knn_query_docs_ops(es_cli: EsClient, index_name: str = ES_INDEX):
+    def wrapper(vec: list[float], k: int = 10, num_candidates: int = 100) -> list[dict]:
+        """
+        Query documents from Elasticsearch
+        :param vec: query vector
+        :param k: k nearest neighbors
+        :param num_candidates: number of candidates
+        :return:
+        """
+        knn_query = {
+            "knn": {
+                "field": "features",
+                "query_vector": vec,
+                "k": k,
+                "num_candidates": num_candidates
+            },
+            "_source": {
+                "excludes": ["features"]
+            }
+        }
+
+        res = es_cli.query(index_name, knn_query)
+        return res
 
     return wrapper

@@ -154,3 +154,29 @@ def test_create_index():
 
     ok = es_cli.create_index(index_name=index_name, body=body)
     print("ok: ", ok)
+
+
+def test_query():
+    es_cli = EsClient(host=ES_HOST, port=ES_PORT)
+
+    index_name = ES_INDEX
+    img_url = 'http://localhost:10086/file/imgsch/07dd1974a83862447b3dfa23957a4cfc.jpg'
+    model = VitBase224()
+    obj_feat, candidate_box = model.extract_primary_features(img_url)
+    # print("obj_feat: ", obj_feat)
+    query_vector = obj_feat.features
+
+    knn_query = {
+        "knn": {
+            "field": "features",
+            "query_vector": query_vector,
+            "k": 10,
+            "num_candidates": 10
+        },
+        "_source": {
+            "excludes": ["features"]
+        }
+    }
+
+    res = es_cli.query(index_name, knn_query)
+    print("res: ", res)
