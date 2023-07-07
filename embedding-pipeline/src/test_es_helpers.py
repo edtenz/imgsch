@@ -106,7 +106,7 @@ def test_insert_batch():
 
 def test_create_index():
     es_cli = EsClient(host=ES_HOST, port=ES_PORT)
-    index_name = 'testimgsch1'
+    index_name = 'imgsch'
 
     body = {
         "settings": {

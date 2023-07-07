@@ -180,7 +180,7 @@ def extract_features_ops(model: ImageFeatureModel) -> callable:
     """
     Extract feature from local file or url
     :param model: model
-    :return: sbox, label, score, features
+    :return: (sbox, label, score, features)
     """
 
     def wrapper(url: str) -> (str, str, float, list[float]):

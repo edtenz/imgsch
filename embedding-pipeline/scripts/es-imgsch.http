@@ -100,6 +100,33 @@ GET /imgsch/_search
   }
 }
 
+### refresh index
+GET imgsch/_refresh
+
+### match all
+GET imgsch/_search
+{
+  "query": {
+    "match_all": {}
+  },
+  "track_total_hits": true
+}
+
+### match all without showing features
+GET imgsch/_search
+{
+  "_source": {
+    "excludes": ["features"]
+  },
+  "query": {
+    "match_all": {}
+  },
+  "track_total_hits": true
+}
+
+
+### delete index
+DELETE /imgsch
 
 ### query
 GET /imgsch/_search
@@ -242,3 +269,6 @@ GET /imgsch/_search
     "min_score": 0.35,
     "size": 600
 }
+
+
+

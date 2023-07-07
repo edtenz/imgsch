@@ -104,6 +104,31 @@ def insert_doc_ops(es_cli: EsClient, index_name: str = ES_INDEX):
     return wrapper
 
 
+def insert_img_doc_ops(es_cli: EsClient, index_name: str = ES_INDEX):
+    """
+    Insert image document to Elasticsearch
+    :param es_cli: es client
+    :param index_name: index name
+    :param (img_key, img_url, bbox, bbox_score, label, features, id)
+    :return: true if insert successfully, false otherwise
+    """
+
+    def wrapper(img_key: str, img_url: str,
+                bbox: str, bbox_score: float, label: str,
+                features: list[float], id: str = None) -> bool:
+        doc = {
+            'image_key': img_key,
+            'image_url': img_url,
+            'bbox': bbox,
+            'bbox_score': bbox_score,
+            'label': label,
+            'features': features,
+        }
+        return es_cli.insert_doc(index_name, doc, id)
+
+    return wrapper
+
+
 def bulk_docs_ops(es_cli: EsClient, index_name: str = ES_INDEX):
     def wrapper(docs: list[dict]) -> int:
         """
@@ -141,3 +166,51 @@ def knn_query_docs_ops(es_cli: EsClient, index_name: str = ES_INDEX):
         return res
 
     return wrapper
+
+
+def create_img_index(es_cli: EsClient, index_name: str = ES_INDEX) -> bool:
+    body = {
+        "settings": {
+            "index": {
+                "refresh_interval": "180s",
+                "number_of_replicas": "0"
+            }
+        },
+        "mappings": {
+            "properties": {
+                "image_key": {
+                    "type": "keyword",
+                    "index": True
+                },
+                "image_url": {
+                    "type": "text",
+                    "index": False
+                },
+                "bbox": {
+                    "type": "keyword",
+                    "index": False
+                },
+                "bbox_score": {
+                    "type": "float",
+                    "index": True
+                },
+                "label": {
+                    "type": "text",
+                    "index": True
+                },
+                "features": {
+                    "type": "dense_vector",
+                    "dims": 768,
+                    "index": True,
+                    "similarity": "dot_product",
+                    "index_options": {
+                        "type": "hnsw",
+                        "m": 16,
+                        "ef_construction": 256
+                    }
+                }
+            }
+        }
+    }
+
+    return es_cli.create_index(index_name=index_name, body=body)
