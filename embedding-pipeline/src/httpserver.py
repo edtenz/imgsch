@@ -3,14 +3,15 @@ import uvicorn
 from fastapi import FastAPI, UploadFile, File
 from fastapi.responses import JSONResponse
 from starlette.middleware.cors import CORSMiddleware
-from starlette.responses import FileResponse
 
 import image_helper
-from config import HTTP_PORT, MINIO_PROXY_ENDPOINT
+from config import (
+    HTTP_PORT,
+    MINIO_PROXY_ENDPOINT,
+)
 from load import do_milvus_embedding
 from logger import LOGGER
 from milvus_helpers import MilvusClient
-from minio_helpers import MinioClient, download_object
 from model import VitBase224
 from mysql_helpers import MysqlClient
 from search import do_search
@@ -29,7 +30,6 @@ app.add_middleware(
 # MODEL = Resnet50()
 MODEL = VitBase224()
 MYSQL_CLIENT = MysqlClient()
-MINIO_CLIENT = MinioClient()
 MILVUS_CLIENT = MilvusClient()
 
 
@@ -54,22 +54,6 @@ def load_img(img_bucket: str, table_name: str):
         LOGGER.debug(f"detect image bucket: {img_bucket}, table_name: {table_name}")
         count = do_milvus_embedding(img_bucket, MODEL, MILVUS_CLIENT, MYSQL_CLIENT, table_name)
         return JSONResponse({'status': True, 'msg': 'success', 'data': count})
-    except Exception as e:
-        LOGGER.error(f"Get image error: {e}")
-        return {'status': False, 'msg': e}, 400
-
-
-@app.get('/img/{image_key}')
-def get_img(image_key: str):
-    try:
-        LOGGER.debug(f"detect image: {image_key}")
-        if not MINIO_CLIENT.exists_object(image_key):
-            return {'status': False, 'msg': 'image not found'}, 404
-        image_path = download_object(MINIO_CLIENT, image_key)
-        if image_path is None or image_path == "":
-            return {'status': False, 'msg': 'image not found'}, 404
-
-        return FileResponse(image_path, media_type="image/jpeg")
     except Exception as e:
         LOGGER.error(f"Get image error: {e}")
         return {'status': False, 'msg': e}, 400
