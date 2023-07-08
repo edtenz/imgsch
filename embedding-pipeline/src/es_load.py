@@ -9,7 +9,7 @@ from logger import LOGGER
 from model import ImageFeatureModel, extract_features_ops
 
 
-def do_embedding(
+def do_es_embedding(
         bucket_name: str,
         model: ImageFeatureModel,
         es_cli: EsClient,
@@ -34,7 +34,7 @@ def do_embedding(
         LOGGER.info(f"Process file {object_name}, {i + 1}/{total}")
         img_url = f'http://{MINIO_PROXY_ENDPOINT}/file/{bucket_name}/{object_name}'
         try:
-            ok = embedding_pipeline(img_url, model, es_cli, index_name)
+            ok = embedding_es_pipe(img_url, model, es_cli, index_name)
             if ok:
                 success_count += 1
 
@@ -46,10 +46,10 @@ def do_embedding(
     return success_count
 
 
-def embedding_pipeline(img_url: str,
-                       model: ImageFeatureModel,
-                       es_cli: EsClient,
-                       index_name: str = ES_INDEX) -> bool:
+def embedding_es_pipe(img_url: str,
+                      model: ImageFeatureModel,
+                      es_cli: EsClient,
+                      index_name: str = ES_INDEX) -> bool:
     p_insert = (
         pipe.input('url')
         .map('url', 'key', lambda x: x.split('/')[-1].split('.')[0])

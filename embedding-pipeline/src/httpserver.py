@@ -7,12 +7,12 @@ from starlette.responses import FileResponse
 
 import image_helper
 from config import HTTP_PORT, MINIO_PROXY_ENDPOINT
-from load import do_embedding
+from load import do_milvus_embedding
 from logger import LOGGER
-from milvus_helpers import MILVUS_CLIENT
-from minio_helpers import MINIO_CLIENT, download_object
+from milvus_helpers import MilvusClient
+from minio_helpers import MinioClient, download_object
 from model import VitBase224
-from mysql_helpers import MYSQL_CLIENT
+from mysql_helpers import MysqlClient
 from search import do_search
 
 app = FastAPI()
@@ -28,6 +28,9 @@ app.add_middleware(
 
 # MODEL = Resnet50()
 MODEL = VitBase224()
+MYSQL_CLIENT = MysqlClient()
+MINIO_CLIENT = MinioClient()
+MILVUS_CLIENT = MilvusClient()
 
 
 @app.get("/ping")
@@ -49,7 +52,7 @@ def ping(q: str):
 def load_img(img_bucket: str, table_name: str):
     try:
         LOGGER.debug(f"detect image bucket: {img_bucket}, table_name: {table_name}")
-        count = do_embedding(img_bucket, MODEL, MILVUS_CLIENT, MYSQL_CLIENT, table_name)
+        count = do_milvus_embedding(img_bucket, MODEL, MILVUS_CLIENT, MYSQL_CLIENT, table_name)
         return JSONResponse({'status': True, 'msg': 'success', 'data': count})
     except Exception as e:
         LOGGER.error(f"Get image error: {e}")

@@ -1,4 +1,6 @@
-from mysql_helpers import MYSQL_CLIENT, query_mysql_ops
+from mysql_helpers import MysqlClient, query_mysql_ops
+
+MYSQL_CLIENT = MysqlClient()
 
 
 def test_records_by_ids():

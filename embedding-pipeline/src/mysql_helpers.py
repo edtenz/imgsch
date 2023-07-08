@@ -183,6 +183,3 @@ def query_mysql_ops(mysql_cli: MysqlClient, table_name: str = DEFAULT_TABLE) -> 
         return details[0]
 
     return wrapper
-
-
-MYSQL_CLIENT = MysqlClient()

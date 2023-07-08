@@ -9,7 +9,7 @@ from model import ImageFeatureModel
 from mysql_helpers import MysqlClient, insert_mysql_ops
 
 
-def do_embedding(
+def do_milvus_embedding(
         bucket_name: str,
         model: ImageFeatureModel,
         milvus_client: MilvusClient,
@@ -36,7 +36,7 @@ def do_embedding(
         LOGGER.info(f"Process file {object_name}, {i + 1}/{total}")
         img_url = f'http://{MINIO_PROXY_ENDPOINT}/file/{bucket_name}/{object_name}'
         try:
-            ok = embedding_pipeline(img_url, model, milvus_client, mysql_cli, table_name)
+            ok = embedding_milvus_pipe(img_url, model, milvus_client, mysql_cli, table_name)
             if ok:
                 success_count += 1
 
@@ -51,11 +51,11 @@ def do_embedding(
     return success_count
 
 
-def embedding_pipeline(img_url: str,
-                       model: ImageFeatureModel,
-                       milvus_client: MilvusClient,
-                       mysql_cli: MysqlClient,
-                       table_name: str = DEFAULT_TABLE) -> bool:
+def embedding_milvus_pipe(img_url: str,
+                          model: ImageFeatureModel,
+                          milvus_client: MilvusClient,
+                          mysql_cli: MysqlClient,
+                          table_name: str = DEFAULT_TABLE) -> bool:
     p_insert = (
         model.pipeline()
         .filter(('vec',), ('vec',), 'vec', lambda x: x is not None and len(x) > 0)

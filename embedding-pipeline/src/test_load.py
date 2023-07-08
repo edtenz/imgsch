@@ -1,31 +1,31 @@
 from towhee import pipe
 
-from load import do_embedding
-from milvus_helpers import MILVUS_CLIENT
-from minio_helpers import MINIO_CLIENT
+from load import do_milvus_embedding
+from milvus_helpers import MilvusClient
 from model import VitBase224
 from model import extract_features_ops
-from mysql_helpers import MYSQL_CLIENT
-
-MODEL = VitBase224()
+from mysql_helpers import MysqlClient
 
 
 def test_process():
-    img_dir = '../data'
+    vit_model = VitBase224()
+    mysql_cli = MysqlClient()
+    milvus_cli = MilvusClient()
+
     table_name = 'test_collection'
     test_bucket_name = 'mybucket'
     dim = 768
-    vit_model = VitBase224()
-    count = do_embedding(img_dir, vit_model, MILVUS_CLIENT, MYSQL_CLIENT, MINIO_CLIENT, test_bucket_name, table_name,
-                         dim)
+    count = do_milvus_embedding(test_bucket_name, vit_model, milvus_cli, mysql_cli, table_name, dim)
     print(count)
 
 
 def test_load():
+    vit_model = VitBase224()
+
     insert_p = (
         pipe.input('url')
         .map('url', 'key', lambda url: url.split('/')[-1])
-        .map('url', ('sbox', 'label', 'score', 'vec'), extract_features_ops(MODEL))
+        .map('url', ('sbox', 'label', 'score', 'vec'), extract_features_ops(vit_model))
         .filter(('vec',), ('vec',), 'vec', lambda vec: vec is not None and len(vec) > 0)
         .output('key', 'sbox', 'label', 'score', 'vec')
     )

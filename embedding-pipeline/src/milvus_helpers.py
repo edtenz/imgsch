@@ -155,6 +155,3 @@ def search_milvus_ops(milvus_cli: MilvusClient, collection_name: str = DEFAULT_T
         return res
 
     return wrapper
-
-
-MILVUS_CLIENT = MilvusClient()

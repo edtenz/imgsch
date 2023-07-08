@@ -161,6 +161,3 @@ def download_object(minio_cli: MinioClient,
         return download_path
     else:
         return ''
-
-
-MINIO_CLIENT = MinioClient()

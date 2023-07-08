@@ -1,9 +1,13 @@
 from config import DEFAULT_TABLE
-from milvus_helpers import MILVUS_CLIENT
-from minio_helpers import MINIO_CLIENT
+from milvus_helpers import MilvusClient
+from minio_helpers import MinioClient
 from model import VitBase224
-from mysql_helpers import MYSQL_CLIENT
+from mysql_helpers import MysqlClient
 from search import do_search, do_download
+
+MYSQL_CLIENT = MysqlClient()
+MINIO_CLIENT = MinioClient()
+MILVUS_CLIENT = MilvusClient()
 
 
 def test_do_search():
