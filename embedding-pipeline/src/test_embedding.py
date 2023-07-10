@@ -1,9 +1,12 @@
 from towhee import pipe
 
 from config import ES_HOST, ES_PORT, ES_INDEX, MINIO_BUCKET_NAME
+from embedding import (
+    do_milvus_embedding,
+    embedding_es_pipe,
+    do_es_embedding,
+)
 from es_helpers import EsClient, create_img_index
-from load import do_milvus_embedding
-from load import embedding_es_pipe, do_es_embedding
 from milvus_helpers import MilvusClient
 from model import VitBase224
 from model import extract_features_ops

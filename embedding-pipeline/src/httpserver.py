@@ -9,12 +9,13 @@ from config import (
     HTTP_PORT,
     MINIO_PROXY_ENDPOINT,
 )
+from embedding import (
+    # do_milvus_embedding,
+    do_es_embedding,
+)
 from es_helpers import EsClient
-from load import do_milvus_embedding
 from logger import LOGGER
-from milvus_helpers import MilvusClient
 from model import VitBase224
-from mysql_helpers import MysqlClient
 from search import do_es_search
 
 app = FastAPI()
@@ -28,10 +29,9 @@ app.add_middleware(
 
 )
 
-# MODEL = Resnet50()
+# MYSQL_CLIENT = MysqlClient()
+# MILVUS_CLIENT = MilvusClient()
 VIT_MODEL = VitBase224()
-MYSQL_CLIENT = MysqlClient()
-MILVUS_CLIENT = MilvusClient()
 ES_CLIENT = EsClient()
 
 
@@ -54,7 +54,7 @@ def ping(q: str):
 def load_img(img_bucket: str, table_name: str):
     try:
         LOGGER.debug(f"detect image bucket: {img_bucket}, table_name: {table_name}")
-        count = do_milvus_embedding(img_bucket, VIT_MODEL, MILVUS_CLIENT, MYSQL_CLIENT, table_name)
+        count = do_es_embedding(img_bucket, VIT_MODEL, ES_CLIENT, table_name)
         return JSONResponse({'status': True, 'msg': 'success', 'data': count})
     except Exception as e:
         LOGGER.error(f"Get image error: {e}")
