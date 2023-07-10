@@ -85,7 +85,8 @@ class EsClient(object):
         """
         try:
             res = self.es.search(index=index_name, body=body)
-            return res['hits']['hits']
+            hits = res['hits']['hits']
+            return hits
         except Exception as e:
             LOGGER.error(f"Failed to query documents: {e}")
             return []
@@ -142,13 +143,13 @@ def bulk_docs_ops(es_cli: EsClient, index_name: str = ES_INDEX):
 
 
 def knn_query_docs_ops(es_cli: EsClient, index_name: str = ES_INDEX):
-    def wrapper(vec: list[float], k: int = 10, num_candidates: int = 100) -> list[dict]:
+    def wrapper(vec: list[float], k: int = 10, num_candidates: int = 100) -> list[(str, str, str, float, str, float)]:
         """
         Query documents from Elasticsearch
         :param vec: query vector
         :param k: k nearest neighbors
         :param num_candidates: number of candidates
-        :return:
+        :return: list of records: (image_key, image_url, bbox, bbox_score, label, score)
         """
         knn_query = {
             "knn": {
@@ -162,7 +163,22 @@ def knn_query_docs_ops(es_cli: EsClient, index_name: str = ES_INDEX):
             }
         }
 
-        res = es_cli.query(index_name, knn_query)
+        hits = es_cli.query(index_name, knn_query)
+        if len(hits) == 0:
+            LOGGER.debug(f"No hits found for query: {knn_query}")
+            return []
+        res = []
+        for hit in hits:
+            source = hit['_source']
+            res.append((
+                source['image_key'],
+                source['image_url'],
+                source['bbox'],
+                source['bbox_score'],
+                source['label'],
+                hit['_score'],
+            ))
+
         return res
 
     return wrapper

@@ -1,10 +1,13 @@
 from pydantic import BaseModel
 from towhee import pipe
 
-from config import DEFAULT_TABLE, MINIO_BUCKET_NAME
+from config import (
+    DEFAULT_TABLE,
+    ES_INDEX,
+)
+from es_helpers import EsClient, knn_query_docs_ops
 from logger import LOGGER
 from milvus_helpers import MilvusClient, search_milvus_ops
-from minio_helpers import MinioClient, download_minio_ops
 from model import ImageFeatureModel, ObjectFeature, BoundingBox
 from mysql_helpers import MysqlClient, query_mysql_ops
 
@@ -27,11 +30,11 @@ class SearchResult(BaseModel):
         }
 
 
-def do_search(img_url: str,
-              model: ImageFeatureModel,
-              milvus_client: MilvusClient,
-              mysql_cli: MysqlClient,
-              table_name: str = DEFAULT_TABLE) -> (ObjectFeature, list[BoundingBox], list[SearchResult]):
+def do_milvus_search(img_url: str,
+                     model: ImageFeatureModel,
+                     milvus_client: MilvusClient,
+                     mysql_cli: MysqlClient,
+                     table_name: str = DEFAULT_TABLE) -> (ObjectFeature, list[BoundingBox], list[SearchResult]):
     """
     Search similar images for the given image.
     :param img_url: given image path
@@ -67,26 +70,38 @@ def do_search(img_url: str,
     return obj_feat, candidate_box, res_list
 
 
-def do_download(image_key: str,
-                minio_client: MinioClient) -> str:
-    """
-    Download image from minio by give image key.
-    :param image_key:
-    :param minio_client:
-    :param table_name:
-    :return:
-    """
+def do_es_search(img_url: str,
+                 model: ImageFeatureModel,
+                 es_cli: EsClient,
+                 index_name: str = ES_INDEX) -> (ObjectFeature, list[BoundingBox], list[SearchResult]):
+    obj_feat, candidate_box = model.extract_primary_features(img_url)
+    if obj_feat is None:
+        return None, candidate_box, []
+    if obj_feat.features is None:
+        return obj_feat, candidate_box, []
 
-    p_download = (
-        pipe.input('image_key')
-        .map('image_key', 'img_path', download_minio_ops(minio_client, MINIO_BUCKET_NAME))
-        .filter(('img_path'), ('img_path'), 'img_path', lambda url: (url is not None or url != ''))
-        .output('img_path')
+    p_search_pre = (
+        pipe.input('vec').
+        filter(('vec',), ('vec',), 'vec', lambda x: x is not None and len(x) > 0).
+        map('vec', 'k', lambda x: 10).
+        map('vec', 'candidates', lambda x: 20).
+        flat_map(('vec', 'k', 'candidates'),
+                 ('image_key', 'image_url', 'bbox', 'bbox_score', 'label', 'score'),
+                 knn_query_docs_ops(es_cli, index_name)).
+        filter(('image_url', 'bbox', 'label', 'score'),
+               ('image_url', 'bbox', 'label', 'score'),
+               'score', lambda x: x > 0.65).
+        output('image_url', 'bbox', 'label', 'score')
     )
 
-    res = p_download(image_key)
+    res = p_search_pre(obj_feat.features)
     size = res.size
-    LOGGER.info(f"Download result size: {size}")
+    LOGGER.info(f"Search result size: {size}")
     if size == 0:
-        raise Exception(f"Download image failed: {image_key}")
-    return res.get()[0]
+        return obj_feat, []
+    res_list = []
+    for i in range(size):
+        it = res.get()
+        search_res = SearchResult(image_key=it[0], box=it[1], label=it[2], score=it[3])
+        res_list.append(search_res)
+    return obj_feat, candidate_box, res_list

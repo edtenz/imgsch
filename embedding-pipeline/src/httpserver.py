@@ -9,12 +9,13 @@ from config import (
     HTTP_PORT,
     MINIO_PROXY_ENDPOINT,
 )
+from es_helpers import EsClient
 from load import do_milvus_embedding
 from logger import LOGGER
 from milvus_helpers import MilvusClient
 from model import VitBase224
 from mysql_helpers import MysqlClient
-from search import do_search
+from search import do_es_search
 
 app = FastAPI()
 origins = ["*"]
@@ -28,9 +29,10 @@ app.add_middleware(
 )
 
 # MODEL = Resnet50()
-MODEL = VitBase224()
+VIT_MODEL = VitBase224()
 MYSQL_CLIENT = MysqlClient()
 MILVUS_CLIENT = MilvusClient()
+ES_CLIENT = EsClient()
 
 
 @app.get("/ping")
@@ -52,7 +54,7 @@ def ping(q: str):
 def load_img(img_bucket: str, table_name: str):
     try:
         LOGGER.debug(f"detect image bucket: {img_bucket}, table_name: {table_name}")
-        count = do_milvus_embedding(img_bucket, MODEL, MILVUS_CLIENT, MYSQL_CLIENT, table_name)
+        count = do_milvus_embedding(img_bucket, VIT_MODEL, MILVUS_CLIENT, MYSQL_CLIENT, table_name)
         return JSONResponse({'status': True, 'msg': 'success', 'data': count})
     except Exception as e:
         LOGGER.error(f"Get image error: {e}")
@@ -76,7 +78,7 @@ async def search(file: UploadFile = File(...)):
         return JSONResponse({'status': False, 'msg': 'upload image failed'})
 
     img_url = upload_url
-    obj_feat, candidate_box, res_list = do_search(img_url, MODEL, MILVUS_CLIENT, MYSQL_CLIENT)
+    obj_feat, candidate_box, res_list = do_es_search(img_url, VIT_MODEL, ES_CLIENT)
     if obj_feat is None:
         return JSONResponse({'status': False, 'msg': 'image detect or extract failed'})
     if len(res_list) == 0:

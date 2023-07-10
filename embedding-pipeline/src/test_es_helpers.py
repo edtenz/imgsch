@@ -1,7 +1,7 @@
 from towhee import pipe, ops
 
 from config import ES_HOST, ES_PORT, ES_INDEX
-from es_helpers import EsClient
+from es_helpers import EsClient, knn_query_docs_ops
 from model import VitBase224
 
 
@@ -180,3 +180,50 @@ def test_query():
 
     res = es_cli.query(index_name, knn_query)
     print("res: ", res)
+
+
+def test_query_ops():
+    es_cli = EsClient(host=ES_HOST, port=ES_PORT)
+
+    index_name = ES_INDEX
+    img_url = 'http://localhost:10086/file/imgsch/07dd1974a83862447b3dfa23957a4cfc.jpg'
+    vit_model = VitBase224()
+    obj_feat, candidate_box = vit_model.extract_primary_features(img_url)
+    # print("obj_feat: ", obj_feat)
+    query_vector = obj_feat.features
+
+    res = knn_query_docs_ops(es_cli, index_name)(vec=query_vector, k=10, num_candidates=20)
+    # {'image_key': '07dd1974a83862447b3dfa23957a4cfc',
+    #  'image_url': 'http://localhost:10086/file/imgsch/07dd1974a83862447b3dfa23957a4cfc.jpg', 'bbox': '53,14,368,261',
+    #  'bbox_score': 0.8786754012107849, 'label': 'sheep', 'score': 0.9999999}
+    print("res: ", res)
+    for item in res:
+        print(item)
+
+
+def test_es_query_pipe():
+    es_cli = EsClient(host=ES_HOST, port=ES_PORT)
+
+    index_name = ES_INDEX
+    img_url = 'http://localhost:10086/file/imgsch/07dd1974a83862447b3dfa23957a4cfc.jpg'
+    vit_model = VitBase224()
+    obj_feat, candidate_box = vit_model.extract_primary_features(img_url)
+    # print("obj_feat: ", obj_feat)
+    query_vector = obj_feat.features
+
+    query_pipe = (
+        pipe.input('vec').
+        map('vec', 'k', lambda x: 10).
+        map('vec', 'candidates', lambda x: 20).
+        flat_map(('vec', 'k', 'candidates'),
+                 ('image_key', 'image_url', 'bbox', 'bbox_score', 'label', 'score'),
+                 knn_query_docs_ops(es_cli, index_name)).
+        output('image_key', 'image_url', 'bbox', 'bbox_score', 'label', 'score')
+    )
+
+    res = query_pipe(query_vector)
+    size = res.size
+    print("size: ", size)
+    for i in range(size):
+        it = res.get()
+        print(it)
