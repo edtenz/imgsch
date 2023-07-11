@@ -1,9 +1,0 @@
-
-### detect by get
-GET localhost:8099/detect?key=224d11f6b5d17a73c4d03546b433410a
-
-
-### extract by get
-GET localhost:8099/extract?key=224d11f6b5d17a73c4d03546b433410a&bbox=448,153,663,375
-
-

@@ -1,7 +1,0 @@
-/venv
-/.idea
-/build
-.pytest_cache/
-logs/*
-tmp/
-tmp/*
