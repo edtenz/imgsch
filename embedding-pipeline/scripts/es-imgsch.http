@@ -1,20 +1,21 @@
-# list indices
+### list indices
 GET /_cat/indices?v
  
-# list nodes
+### list nodes
 GET /_cat/nodes?v
  
  
-# check config
+### check config
 GET /imgsch/_settings
- 
+
+### mapping
 GET /imgsch/_mapping
 
 
 
 
 
-# create index
+### create index
 PUT /imgsch
 {
   "mappings": {
