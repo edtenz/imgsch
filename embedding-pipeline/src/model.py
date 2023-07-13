@@ -176,6 +176,40 @@ class VitBase224(ImageFeatureModel):
         super().__init__('vit_base_patch16_224')
 
 
+class ImageCaptioning(object):
+
+    def __init__(self, op: callable = ops.image_captioning.clipcap(model_name='clipcap_coco')):
+        self.pipeline = (
+            pipe.input('url')
+            .map('url', 'img', ops.image_decode.cv2_rgb())  # decode image
+            .map('img', 'caption', op)  # captioning
+            .output('caption')
+        )
+
+    def generate_caption(self, url: str) -> str:
+        """
+        Generate caption from
+        :param url: url or local file path
+        :return: caption
+        """
+        res = self.pipeline(url)
+        if res.size == 0:
+            return ''
+        return res.get()[0]
+
+
+class ClipcapCoco(ImageCaptioning):
+
+    def __init__(self):
+        super().__init__(op=ops.image_captioning.clipcap(model_name='clipcap_coco'))
+
+
+class ExpansionNet(ImageCaptioning):
+
+    def __init__(self):
+        super().__init__(op=ops.image_captioning.expansionnet_v2(model_name='expansionnet_rf'))
+
+
 def extract_features_ops(model: ImageFeatureModel) -> callable:
     """
     Extract feature from local file or url

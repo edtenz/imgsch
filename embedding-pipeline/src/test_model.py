@@ -1,5 +1,10 @@
 import image_helper
-from model import Resnet50, VitTiny224, VitBase224
+from model import (
+    Resnet50,
+    VitTiny224,
+    VitBase224,
+    ExpansionNet,
+)
 
 
 def test_resnet50_extract_features():
@@ -76,3 +81,9 @@ def test_pipeline():
     for i in range(size):
         it = res.get()
         print(f'box: {it[0]}, label: {it[1]}, score: {it[2]}, vec: {it[3]}')
+
+
+def test_generate_caption():
+    caption_model = ExpansionNet()
+    caption = caption_model.generate_caption('../data/bicycle.jpg')
+    print(caption)
