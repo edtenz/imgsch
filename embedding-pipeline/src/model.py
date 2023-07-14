@@ -179,6 +179,7 @@ class VitBase224(ImageFeatureModel):
 class ImageCaptioning(object):
 
     def __init__(self, op: callable = ops.image_captioning.clipcap(model_name='clipcap_coco')):
+        self.auto_config = AutoConfig.LocalCPUConfig()
         self.pipeline = (
             pipe.input('url')
             .map('url', 'img', ops.image_decode.cv2_rgb())  # decode image
@@ -208,6 +209,75 @@ class ExpansionNet(ImageCaptioning):
 
     def __init__(self):
         super().__init__(op=ops.image_captioning.expansionnet_v2(model_name='expansionnet_rf'))
+
+
+class ImageText(object):
+
+    def __init__(self,
+                 img_op: callable = ops.image_text_embedding.clip(model_name='clip_vit_base_patch16',
+                                                                  modality='image'),
+                 text_op: callable = ops.image_text_embedding.clip(model_name='clip_vit_base_patch16',
+                                                                   modality='text')):
+        self.auto_config = AutoConfig.LocalCPUConfig()
+        self.img_pipe = (
+            pipe.input('url')
+            .map('url', 'img', ops.image_decode.cv2_rgb())
+            .map('img', 'vec', img_op)
+            .map('vec', 'vec', ops.towhee.np_normalize())
+            # .output('vec')
+        )
+
+        self.text_pipe = (
+            pipe.input('text')
+            .map('text', 'vec', text_op)
+            .map('vec', 'vec', ops.towhee.np_normalize())
+            # .output('vec')
+        )
+
+    def img_pipeline(self):
+        return self.img_pipe
+
+    def text_pipeline(self):
+        return self.text_pipe
+
+    def generate_image_embedding(self, url: str) -> (list[float]):
+        """
+        Generate image embedding from
+        :param url: url or local file path
+        :return: image embedding
+        """
+        p = (
+            self.img_pipeline()
+            .output('vec')
+        )
+        res = p(url)
+        if res.size == 0:
+            return []
+        return res.get()[0].tolist()
+
+    def generate_text_embedding(self, text: str) -> (list[float]):
+        """
+        Generate text embedding from
+        :param text: text
+        :return: text embedding
+        """
+        p = (
+            self.text_pipeline()
+            .output('vec')
+        )
+        res = p(text)
+        if res.size == 0:
+            return []
+        return res.get()[0].tolist()
+
+
+class ClipVitBasePatch16(ImageText):
+
+    def __init__(self):
+        super().__init__(img_op=ops.image_text_embedding.clip(model_name='clip_vit_base_patch16',
+                                                              modality='image'),
+                         text_op=ops.image_text_embedding.clip(model_name='clip_vit_base_patch16',
+                                                               modality='text'))
 
 
 def extract_features_ops(model: ImageFeatureModel) -> callable:

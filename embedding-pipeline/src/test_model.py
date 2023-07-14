@@ -1,9 +1,12 @@
+import numpy as np
+
 import image_helper
 from model import (
     Resnet50,
     VitTiny224,
     VitBase224,
     ExpansionNet,
+    ClipVitBasePatch16,
 )
 
 
@@ -87,3 +90,20 @@ def test_generate_caption():
     caption_model = ExpansionNet()
     caption = caption_model.generate_caption('../data/bicycle.jpg')
     print(caption)
+
+
+def test_imagetext_model():
+    imagetext_model = ClipVitBasePatch16()
+    img_url = '../data/bicycle.jpg'
+    img_vec = imagetext_model.generate_image_embedding(img_url)
+    print(f'len(img_vec): {len(img_vec)}')
+
+    txt_vec = imagetext_model.generate_text_embedding('a man rides a bicycle')
+    print(f'len(txt_vec): {len(txt_vec)}')
+
+    img_arr = np.array(img_vec)
+    txt_arr = np.array(txt_vec)
+
+    dp = np.dot(img_arr, txt_arr)
+
+    print(f'cos_sim: {dp}')
